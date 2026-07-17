@@ -38,7 +38,8 @@ Antes de comenzar el desarrollo se está elaborando toda la documentación funci
 - ✅ Problema
 - ✅ Objetivos
 - ✅ Usuarios del sistema
-- ⏳ Casos de uso
+- ✅ Casos de uso
+- ✅ Reglas de negocio
 - ⏳ Requisitos funcionales
 - ⏳ Requisitos no funcionales
 - ⏳ Modelo de datos
