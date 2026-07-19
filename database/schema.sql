@@ -120,7 +120,7 @@ CREATE TABLE movimiento_inventario (
         FOREIGN KEY (id_recepcion) REFERENCES recepcion(id_recepcion),
 
     CONSTRAINT fk_pedido_movimiento_inventario
-        FOREIGN KEY (id_pedido) REFERENCES pedido(id_pedido)
+        FOREIGN KEY (id_pedido) REFERENCES pedido(id_pedido),
 
     CONSTRAINT chk_cantidad_movimiento
         CHECK (cantidad > 0)
@@ -148,7 +148,7 @@ CREATE TABLE incidencia (
         FOREIGN KEY (id_pedido) REFERENCES pedido(id_pedido),
 
     CONSTRAINT fk_recepcion_incidencia
-        FOREIGN KEY (id_recepcion) REFERENCES recepcion(id_recepcion)
+        FOREIGN KEY (id_recepcion) REFERENCES recepcion(id_recepcion),
     
     CONSTRAINT chk_tipo_incidencia
         CHECK (tipo_incidencia IN ('Producto', 'Pedido', 'Recepcion', 'Inventario')),
@@ -194,7 +194,7 @@ CREATE TABLE detalle_recepcion (
         CHECK (cantidad_recibida >= 0),
 
     CONSTRAINT chk_cantidad_esperada
-        CHECK (cantidad_esperada > 0)
+        CHECK (cantidad_esperada > 0),
 
     CONSTRAINT chk_cantidad_recibida_maxima
         CHECK (cantidad_recibida <= cantidad_esperada)
