@@ -123,7 +123,15 @@ CREATE TABLE movimiento_inventario (
         FOREIGN KEY (id_pedido) REFERENCES pedido(id_pedido),
 
     CONSTRAINT chk_cantidad_movimiento
-        CHECK (cantidad > 0)
+        CHECK (cantidad > 0),
+
+    CONSTRAINT chk_tipo_movimiento
+    CHECK (tipo_movimiento IN (
+        'ENTRADA',
+        'SALIDA',
+        'AJUSTE_POSITIVO',
+        'AJUSTE_NEGATIVO'
+    ))
 );
 
 CREATE TABLE incidencia (
@@ -197,7 +205,10 @@ CREATE TABLE detalle_recepcion (
         CHECK (cantidad_esperada > 0),
 
     CONSTRAINT chk_cantidad_recibida_maxima
-        CHECK (cantidad_recibida <= cantidad_esperada)
+        CHECK (cantidad_recibida <= cantidad_esperada),
+
+    CONSTRAINT uq_recepcion_producto
+        UNIQUE (id_recepcion, id_producto)
 );
 
 CREATE TABLE tarea (
@@ -222,6 +233,16 @@ CREATE TABLE tarea (
 
     CONSTRAINT chk_estado_tarea
         CHECK (estado IN ('pendiente', 'en_proceso', 'resuelta', 'cerrada'))
+
+    CONSTRAINT chk_tipo_tarea
+        CHECK (tipo_tarea IN (
+        'Pedido',
+        'Recepcion',
+        'Revision',
+        'Inventario',
+        'Reposicion'
+    )
+)
 );
 
 
