@@ -9,8 +9,10 @@ import java.util.List;
 @Service
 public class ProductoService {
 
+    //instanciamos el repository
     private final ProductoRepository productoRepository;
 
+    //creamos el constructor y le pasamos el repository
     public ProductoService(ProductoRepository productoRepository) {
         this.productoRepository = productoRepository;
     }
