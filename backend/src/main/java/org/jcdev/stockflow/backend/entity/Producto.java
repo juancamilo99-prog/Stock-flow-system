@@ -33,6 +33,9 @@ public class Producto {
     @ManyToOne
     @JoinColumn(name = "id_categoria")
     private Categoria categoria;
+    @ManyToOne
+    @JoinColumn(name = "id_ubicacion")
+    private Ubicacion ubicacion;
 
 
     public Producto(String nombre, String descripcion, LocalDate fechaProduccion, LocalDate fechaCaducidad, String codigoBarras) {
