@@ -25,11 +25,11 @@ public class UbicacionService {
         return ubicacionRepository.findAll();
     }
 
-    //obtener ubicaciones por productos
+    //obtener productos por ubicacion
     public List<Producto> obtenerProductosPorUbicacion(Long idUbicacion){
         Ubicacion ubicacion = ubicacionRepository.findById(idUbicacion)
                 .orElseThrow(() ->
-                        new IllegalArgumentException("El ubicacion no existe"+idUbicacion
+                        new IllegalArgumentException("La ubicacion no existe"+idUbicacion
                         ));
         return productoRepository.findByUbicacionId(ubicacion.getId());
     }

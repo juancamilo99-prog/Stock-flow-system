@@ -3,6 +3,7 @@ package org.jcdev.stockflow.backend.service;
 import org.jcdev.stockflow.backend.entity.Producto;
 import org.jcdev.stockflow.backend.repository.ProductoRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 
@@ -21,5 +22,12 @@ public class ProductoService {
     //obtener todos los productos
     public List<Producto> obtenerTodosProductos(){
         return productoRepository.findAll();
+    }
+
+    public Producto obtenerProductoPorId(@PathVariable Long idProducto){
+
+        return productoRepository.findById(idProducto)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("No existe el producto con el id: " + idProducto));
     }
 }
