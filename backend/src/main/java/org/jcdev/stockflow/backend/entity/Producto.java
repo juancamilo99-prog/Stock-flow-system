@@ -1,13 +1,12 @@
 package org.jcdev.stockflow.backend.entity;
 
-import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
-import java.util.Date;
+
 
 @Setter
 @Getter
@@ -28,6 +27,13 @@ public class Producto {
     @Column(name = "codigo_barras")
     private String codigoBarras;
     private boolean activo;
+
+    //relacion con la entidad categoria
+    //muchos a uno
+    @ManyToOne
+    @JoinColumn(name = "id_categoria")
+    private Categoria categoria;
+
 
     public Producto(String nombre, String descripcion, LocalDate fechaProduccion, LocalDate fechaCaducidad, String codigoBarras) {
         this.nombre = nombre;
