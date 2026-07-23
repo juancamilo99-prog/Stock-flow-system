@@ -24,6 +24,7 @@ public class ProductoService {
         return productoRepository.findAll();
     }
 
+    //obtener productos por identificador
     public Producto obtenerProductoPorId(@PathVariable Long idProducto){
 
         return productoRepository.findById(idProducto)
