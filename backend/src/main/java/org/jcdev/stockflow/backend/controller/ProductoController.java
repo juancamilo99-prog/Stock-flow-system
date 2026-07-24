@@ -1,13 +1,11 @@
 package org.jcdev.stockflow.backend.controller;
 
 
+import jakarta.validation.Valid;
+import org.jcdev.stockflow.backend.dto.CrearProductoDto;
 import org.jcdev.stockflow.backend.entity.Producto;
-import org.jcdev.stockflow.backend.repository.ProductoRepository;
 import org.jcdev.stockflow.backend.service.ProductoService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -22,7 +20,7 @@ public class ProductoController {
         this.productoService = productoService;
     }
 
-    @GetMapping(path = "/")
+    @GetMapping
     public List<Producto> obtenerProductos(){
         return productoService.obtenerTodosProductos();
     }
@@ -30,5 +28,10 @@ public class ProductoController {
     @GetMapping(path = "/{idProducto}")
     public Producto obtenerProductoPorId(@PathVariable Long idProducto){
         return productoService.obtenerProductoPorId(idProducto);
+    }
+
+    @PostMapping
+    public Producto crearProducto(@Valid @RequestBody CrearProductoDto crearProductoDto){
+        return productoService.crearProducto(crearProductoDto);
     }
 }
