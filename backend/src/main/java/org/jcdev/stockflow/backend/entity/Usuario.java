@@ -22,10 +22,10 @@ public class Usuario {
     @NotBlank
     @Column(nullable = false)
     private String nombre;
-    @Email
     @Column(nullable = false, unique = true)
-    @NotBlank
     private String email;
+    @Column(nullable = false)
+    private String telefono;
     @NotBlank
     @Column(length = 100, nullable = false,name = "password_hash")
     private String password;
@@ -34,11 +34,12 @@ public class Usuario {
     private Rol rol;
     private boolean activo;
 
-    public Usuario(String nombre, String email, String password, Rol rol, boolean activo) {
+    public Usuario(String nombre, String email, String telefono, String password, Rol rol, boolean activo) {
         this.nombre = nombre;
         this.email = email;
+        this.telefono = telefono;
         this.password = password;
-        this.activo = activo;
         this.rol = rol;
+        this.activo = activo;
     }
 }
