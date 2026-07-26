@@ -57,7 +57,7 @@ Antes de comenzar el desarrollo se está elaborando toda la documentación funci
 
 ### Base de datos
 
-Todavia sin definir
+PostgreSQL
 
 ### Frontend
 
@@ -67,6 +67,8 @@ Todavia sin definir
 
 - Git
 - GitHub
+- DBeaver
+-Docker Compose
 
 
 ---
