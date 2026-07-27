@@ -2,6 +2,7 @@ package org.jcdev.stockflow.backend.controller;
 
 
 import jakarta.validation.Valid;
+import org.jcdev.stockflow.backend.dto.ActualizarProductoDto;
 import org.jcdev.stockflow.backend.dto.CrearProductoDto;
 import org.jcdev.stockflow.backend.entity.Producto;
 import org.jcdev.stockflow.backend.service.ProductoService;
@@ -30,8 +31,23 @@ public class ProductoController {
         return productoService.obtenerProductoPorId(idProducto);
     }
 
+    //crear un producto
     @PostMapping
     public Producto crearProducto(@Valid @RequestBody CrearProductoDto crearProductoDto){
         return productoService.crearProducto(crearProductoDto);
     }
+
+    //actualizar un producto
+    @PatchMapping("/{idProducto}")
+    public Producto actualizarProducto(@PathVariable Long idProducto, @Valid @RequestBody ActualizarProductoDto actualizarProductoDto){
+        return productoService.actualizarProducto(idProducto, actualizarProductoDto);
+    }
+
+    //eliminar un producto
+    @DeleteMapping(path = "/{idProducto}")
+    public Producto eliminarProducto(@PathVariable Long idProducto){
+        return productoService.eliminarProducto(idProducto);
+    }
+
+
 }

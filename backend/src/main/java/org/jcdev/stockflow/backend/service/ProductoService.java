@@ -1,10 +1,8 @@
 package org.jcdev.stockflow.backend.service;
 
+import org.jcdev.stockflow.backend.dto.ActualizarProductoDto;
 import org.jcdev.stockflow.backend.dto.CrearProductoDto;
-import org.jcdev.stockflow.backend.entity.Categoria;
-import org.jcdev.stockflow.backend.entity.Empresa;
-import org.jcdev.stockflow.backend.entity.Producto;
-import org.jcdev.stockflow.backend.entity.Ubicacion;
+import org.jcdev.stockflow.backend.entity.*;
 import org.jcdev.stockflow.backend.repository.CategoriaRepository;
 import org.jcdev.stockflow.backend.repository.EmpresaRepository;
 import org.jcdev.stockflow.backend.repository.ProductoRepository;
@@ -12,6 +10,7 @@ import org.jcdev.stockflow.backend.repository.UbicacionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -49,6 +48,7 @@ public class ProductoService {
                         new IllegalArgumentException("No existe el producto con el id: " + idProducto));
     }
 
+    //metodo para generar un codigo de barras
     private String generarCodigoBarras(){
         String numeroAleatorio = String.valueOf(ThreadLocalRandom.current().nextInt(1000, 1_000_000));
         String codigoBarras = PREFIJO_CODIGO.concat(numeroAleatorio);
@@ -59,6 +59,7 @@ public class ProductoService {
         return codigoBarras;
     }
 
+    //crear un producto
     public Producto crearProducto(CrearProductoDto crearProductoDto){
 
         if (crearProductoDto.getFechaCaducidad().isBefore(crearProductoDto.getFechaProduccion())){
@@ -99,5 +100,62 @@ public class ProductoService {
 
         return productoRepository.save(producto);
 
+    }
+
+    //actualizar un producto
+    public Producto actualizarProducto(Long idProducto, ActualizarProductoDto actualizarProductoDto){
+        Producto producto = productoRepository.findById(idProducto)
+                .orElseThrow(() -> new IllegalArgumentException("No existe el producto con el id: " + idProducto));
+
+        LocalDate fechaProduccionFinal = actualizarProductoDto.getFechaProduccion() != null
+                ? actualizarProductoDto.getFechaProduccion() : producto.getFechaProduccion();
+        LocalDate fechaCaducidadFinal = actualizarProductoDto.getFechaCaducidad() != null
+                ? actualizarProductoDto.getFechaCaducidad() : producto.getFechaCaducidad();
+
+        if (actualizarProductoDto.getNombre() != null){
+            producto.setNombre(actualizarProductoDto.getNombre());
+        }
+        if (actualizarProductoDto.getDescripcion() != null){
+            producto.setDescripcion(actualizarProductoDto.getDescripcion());
+        }
+        if (fechaProduccionFinal != null && fechaCaducidadFinal != null && fechaCaducidadFinal.isBefore(fechaProduccionFinal)){
+            throw new IllegalArgumentException(
+                    "La fecha de caducidad no puede ser anterior a la fecha de produccion"
+            );
+        }
+        if (actualizarProductoDto.getFechaProduccion() != null){
+            producto.setFechaProduccion(actualizarProductoDto.getFechaProduccion());
+        }
+        if (actualizarProductoDto.getFechaCaducidad() != null){
+            producto.setFechaCaducidad(fechaCaducidadFinal);
+        }
+        if (actualizarProductoDto.getIdEmpresa() != null){
+            Empresa empresa = empresaRepository.findById(actualizarProductoDto.getIdEmpresa())
+                    .orElseThrow(() -> new IllegalArgumentException("Empresa no encontrada"));
+            producto.setEmpresa(empresa);
+        }
+        if (actualizarProductoDto.getIdCategoria() != null){
+            Categoria categoria = categoriaRepository.findById(actualizarProductoDto.getIdCategoria())
+                    .orElseThrow(() -> new IllegalArgumentException("Categoria no encontrada"));
+            producto.setCategoria(categoria);
+        }
+        if (actualizarProductoDto.getIdUbicacion() != null){
+            Ubicacion ubicacion = ubicacionRepository.findById(actualizarProductoDto.getIdUbicacion())
+                    .orElseThrow(() -> new IllegalArgumentException("Ubicacion no encontrada"));
+            producto.setUbicacion(ubicacion);
+        }
+        if (actualizarProductoDto.getActivo() != null){
+            producto.setActivo(actualizarProductoDto.getActivo());
+        }
+
+        return productoRepository.save(producto);
+    }
+
+    //eliminar un producto
+    public Producto eliminarProducto(Long idProducto){
+        Producto producto = productoRepository.findById(idProducto)
+                .orElseThrow(() -> new IllegalArgumentException("No existe el producto con el id: " + idProducto));
+        productoRepository.delete(producto);
+        return producto;
     }
 }
