@@ -19,6 +19,7 @@ public class Tarea{
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     @Column(name = "id_tarea")
     private Long id;
+    @Enumerated(EnumType.STRING)
     @Column(name = "tipo_tarea")
     private TipoTarea tipoTarea;
     private String descripcion;
