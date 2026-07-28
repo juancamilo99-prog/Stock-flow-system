@@ -1,6 +1,7 @@
 package org.jcdev.stockflow.backend.controller;
 
 import jakarta.validation.Valid;
+import org.jcdev.stockflow.backend.dto.ActualizarEmpresaDto;
 import org.jcdev.stockflow.backend.dto.CrearEmpresaDto;
 import org.jcdev.stockflow.backend.entity.Empresa;
 import org.jcdev.stockflow.backend.entity.Producto;
@@ -33,5 +34,15 @@ public class EmpresaController {
     @PostMapping
     public Empresa crearEmpresa(@Valid @RequestBody CrearEmpresaDto crearEmpresaDto) {
         return empresaService.crearEmpresa(crearEmpresaDto);
+    }
+
+    @PatchMapping(path = "/{idEmpresa}")
+    public Empresa actualizarEmpresa(@PathVariable Long idEmpresa,@Valid @RequestBody ActualizarEmpresaDto actualizarEmpresaDto) {
+        return empresaService.actualizarEmpresa(idEmpresa, actualizarEmpresaDto);
+    }
+
+    @DeleteMapping(path = "/{idEmpresa}")
+    public Empresa eliminarEmpresa(@PathVariable Long idEmpresa) {
+        return empresaService.eliminarEmpresa(idEmpresa);
     }
 }

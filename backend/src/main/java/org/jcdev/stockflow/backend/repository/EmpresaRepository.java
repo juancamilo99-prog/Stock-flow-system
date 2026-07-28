@@ -11,4 +11,7 @@ public interface EmpresaRepository extends JpaRepository<Empresa, Long> {
 
     boolean existsByNombre(String nombre);
     boolean existsByEmail(String email);
+
+    boolean existsByEmailAndIdNot(String email,Long idEmpresa);
+    boolean existsByNombreAndIdNot(String nombre,Long idEmpresa);
 }
