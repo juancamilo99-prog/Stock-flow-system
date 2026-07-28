@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.jcdev.stockflow.backend.enums.EstadoPedido;
 
 import java.time.LocalDate;
 
@@ -19,17 +20,23 @@ public class Pedido {
     private Long id;
     @Column(name = "fecha_pedido")
     private LocalDate fechaPedido;
+    @Enumerated(EnumType.STRING)
     @Column(name = "estado")
-    private String estadoPedido;
+    private EstadoPedido estadoPedido;
     private String observaciones;
 
     @ManyToOne
     @JoinColumn(name = "id_empresa")
     private Empresa empresa;
+    @ManyToOne
+    @JoinColumn(name = "id_usuario")
+    private Usuario usuario;
 
-    public Pedido(LocalDate fechaPedido, String observaciones) {
-        this.fechaPedido = fechaPedido;
+    public Pedido(String observaciones, Empresa empresa, Usuario usuario) {
+        this.fechaPedido = LocalDate.now();
+        this.estadoPedido = EstadoPedido.PENDIENTE;
         this.observaciones = observaciones;
-        this.estadoPedido = "pendiente";
+        this.empresa = empresa;
+        this.usuario = usuario;
     }
 }

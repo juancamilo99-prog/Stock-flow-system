@@ -1,12 +1,12 @@
 package org.jcdev.stockflow.backend.controller;
 
+import jakarta.validation.Valid;
+import org.jcdev.stockflow.backend.dto.ActualizarPedidoDto;
+import org.jcdev.stockflow.backend.dto.CrearPedidoDto;
 import org.jcdev.stockflow.backend.entity.DetallePedido;
 import org.jcdev.stockflow.backend.entity.Pedido;
 import org.jcdev.stockflow.backend.service.PedidoService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -33,5 +33,20 @@ public class PedidoController {
     @GetMapping(path = "/detalles")
     public List<DetallePedido> obtenerDetalles(){
         return pedidoService.obtenerDetalles();
+    }
+
+    @PostMapping
+    public Pedido crearPedido(@Valid @RequestBody CrearPedidoDto crearPedidoDto){
+        return pedidoService.crearPedido(crearPedidoDto);
+    }
+
+    @PatchMapping(path = "/{idPedido}")
+    public Pedido actualizarPedido(@PathVariable Long idPedido,@Valid @RequestBody ActualizarPedidoDto actualizarPedidoDto){
+        return pedidoService.actualizarPedido(idPedido,actualizarPedidoDto);
+    }
+
+    @DeleteMapping(path = "/{idPedido}")
+    public Pedido eliminarPedido(@PathVariable Long idPedido){
+        return pedidoService.eliminarPedido(idPedido);
     }
 }
