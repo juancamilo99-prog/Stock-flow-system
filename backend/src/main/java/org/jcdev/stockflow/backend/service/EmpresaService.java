@@ -1,5 +1,6 @@
 package org.jcdev.stockflow.backend.service;
 
+import org.jcdev.stockflow.backend.dto.CrearEmpresaDto;
 import org.jcdev.stockflow.backend.entity.Empresa;
 import org.jcdev.stockflow.backend.entity.Producto;
 import org.jcdev.stockflow.backend.repository.EmpresaRepository;
@@ -32,4 +33,24 @@ public class EmpresaService {
 
         return productoRepository.findByEmpresaId(empresa.getId());
     }
+
+    //crear una empresa
+    public Empresa crearEmpresa(CrearEmpresaDto crearEmpresaDto){
+
+        if (empresaRepository.existsByNombre(crearEmpresaDto.getNombre())){
+            throw new IllegalArgumentException("Ya existe una empresa con ese nombre!");
+        }
+        if (empresaRepository.existsByEmail(crearEmpresaDto.getEmail())){
+            throw new IllegalArgumentException("Ya existe una empresa con ese email!");
+        }
+        Empresa empresa = new Empresa();
+        empresa.setNombre(crearEmpresaDto.getNombre());
+        empresa.setEmail(crearEmpresaDto.getEmail());
+        empresa.setTelefono(crearEmpresaDto.getTelefono());
+        empresa.setDireccion(crearEmpresaDto.getDireccion());
+        empresa.setTipoEmpresa(crearEmpresaDto.getTipoEmpresa());
+
+        return empresaRepository.save(empresa);
+    }
+
 }

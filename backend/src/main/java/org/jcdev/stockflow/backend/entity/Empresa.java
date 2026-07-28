@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Email;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.jcdev.stockflow.backend.enums.TipoEmpresa;
 
 @Entity
 @Getter
@@ -23,10 +24,11 @@ public class Empresa {
     private String telefono;
     private Boolean activo;
     private String direccion;
+    @Enumerated(EnumType.STRING)
     @Column(name = "tipo")
-    private String tipoEmpresa;
+    private TipoEmpresa tipoEmpresa;
 
-    public Empresa(String nombre, String email, String telefono, String direccion, String tipo_empresa) {
+    public Empresa(String nombre, String email, String telefono, String direccion, TipoEmpresa tipo_empresa) {
         this.nombre = nombre;
         this.email = email;
         this.telefono = telefono;
