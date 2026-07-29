@@ -1,13 +1,12 @@
 package org.jcdev.stockflow.backend.service;
 
+import org.jcdev.stockflow.backend.dto.ActualizarDetallePedidoDto;
 import org.jcdev.stockflow.backend.dto.ActualizarPedidoDto;
+import org.jcdev.stockflow.backend.dto.CrearDetallePedidoDto;
 import org.jcdev.stockflow.backend.dto.CrearPedidoDto;
 import org.jcdev.stockflow.backend.entity.*;
 import org.jcdev.stockflow.backend.enums.EstadoPedido;
-import org.jcdev.stockflow.backend.repository.DetallePedidoRepository;
-import org.jcdev.stockflow.backend.repository.EmpresaRepository;
-import org.jcdev.stockflow.backend.repository.PedidoRepository;
-import org.jcdev.stockflow.backend.repository.UsuarioRepository;
+import org.jcdev.stockflow.backend.repository.*;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,17 +18,27 @@ public class PedidoService {
     private final DetallePedidoRepository detallePedidoRepository;
     private final EmpresaRepository empresaRepository;
     private final UsuarioRepository usuarioRepository;
+    private final ProductoRepository productoRepository;
 
-    public PedidoService(PedidoRepository pedidoRepository, DetallePedidoRepository detallePedidoRepository, EmpresaRepository empresaRepository, UsuarioRepository usuarioRepository) {
+    public PedidoService(PedidoRepository pedidoRepository, DetallePedidoRepository detallePedidoRepository, EmpresaRepository empresaRepository, UsuarioRepository usuarioRepository, ProductoRepository productoRepository) {
         this.pedidoRepository = pedidoRepository;
         this.detallePedidoRepository = detallePedidoRepository;
         this.empresaRepository = empresaRepository;
         this.usuarioRepository = usuarioRepository;
+        this.productoRepository = productoRepository;
     }
 
     //obtener todos los pedidos
     public List<Pedido> obtenerPedidos(){
         return pedidoRepository.findAll();
+    }
+
+    //obtener pedido por identificador
+    public Pedido obtenerPedidoId(Long idPedido){
+        return pedidoRepository.findById(idPedido)
+                .orElseThrow(
+                        () -> new IllegalArgumentException("Pedido no encontrado")
+                );
     }
 
     //obtenemos el detalle de pedidos por identificador
@@ -46,6 +55,12 @@ public class PedidoService {
         return detallePedidoRepository.findAll();
     }
 
+    //obtener detalle pedido por su identificador
+    public DetallePedido obtenerDetallePorId(Long idDetallePedido){
+        return detallePedidoRepository.findById(idDetallePedido)
+                .orElseThrow(() -> new IllegalArgumentException("El detalle de pedido no existe"));
+    }
+
     //crear pedido
     public Pedido crearPedido(CrearPedidoDto crearPedidoDto){
         Empresa empresa = empresaRepository.findById(crearPedidoDto.getIdEmpresa())
@@ -56,6 +71,7 @@ public class PedidoService {
         return pedidoRepository.save(pedido);
     }
 
+    //actualizar pedido
     public Pedido actualizarPedido(Long idPedido, ActualizarPedidoDto actualizarPedidoDto){
         Pedido pedido = pedidoRepository.findById(idPedido)
                 .orElseThrow(() -> new IllegalArgumentException("El pedido no existe"));
@@ -98,6 +114,7 @@ public class PedidoService {
         return pedidoRepository.save(pedido);
     }
 
+    //eliminar pedido
     public Pedido eliminarPedido(Long idPedido){
         Pedido pedido = pedidoRepository.findById(idPedido)
                 .orElseThrow(() -> new IllegalArgumentException("El pedido no existe"));
@@ -105,5 +122,61 @@ public class PedidoService {
         return pedido;
     }
 
+    //crear detalle de pedido
+    public DetallePedido crearDetallePedido(CrearDetallePedidoDto crearDetallePedidoDto){
 
+        Pedido pedido = pedidoRepository.findById(crearDetallePedidoDto.getIdPedido())
+                .orElseThrow(() -> new IllegalArgumentException("El pedido no existe"));
+        Producto producto = productoRepository.findById(crearDetallePedidoDto.getIdProducto())
+                .orElseThrow(() -> new IllegalArgumentException("El producto no existe"));
+        if (crearDetallePedidoDto.getCantidadSolicitada() <= 0){
+            throw new IllegalArgumentException("La cantidad de solicitada debe ser mayor que 0");
+        }
+        if (pedido.getEstadoPedido() == EstadoPedido.CANCELADO || pedido.getEstadoPedido() == EstadoPedido.RECIBIDO){
+            throw new IllegalArgumentException("no se puede añadir un detalle a un pedido cancelado o recibido");
+        }
+        if (detallePedidoRepository.existsByPedidoIdAndProductoId(pedido.getId(), producto.getId())){
+            throw new IllegalArgumentException("Ya existe un producto con el detalle de solicitado");
+        }
+
+        DetallePedido detallePedido = new DetallePedido(crearDetallePedidoDto.getCantidadSolicitada(),pedido,producto);
+        return detallePedidoRepository.save(detallePedido);
+    }
+
+    //actualizar detalle pedido
+    public DetallePedido actualizarDetallePedido(Long idDetallePedido ,ActualizarDetallePedidoDto actualizarDetallePedidoDto){
+        DetallePedido detallePedido = detallePedidoRepository.findById(idDetallePedido)
+                .orElseThrow(() -> new IllegalArgumentException("El detalle de pedido no existe"));
+
+        if (actualizarDetallePedidoDto.getCantidadSolicitada() != null){
+            if (actualizarDetallePedidoDto.getCantidadSolicitada() <= 0){
+                throw new IllegalArgumentException("La cantidad debe ser mayor que 0");
+            }
+        }
+
+        Pedido pedido = detallePedido.getPedido();
+        if (pedido.getEstadoPedido() == EstadoPedido.RECIBIDO || pedido.getEstadoPedido() == EstadoPedido.CANCELADO){
+            throw new IllegalArgumentException(
+                    "No se puede modificar un detalle de un pedido recibido o cancelado"
+            );
+        }
+        detallePedido.setCantidadSolicitada(actualizarDetallePedidoDto.getCantidadSolicitada());
+
+        return detallePedidoRepository.save(detallePedido);
+    }
+
+    public DetallePedido eliminarDetallePedido(Long idDetallePedido){
+        DetallePedido detallePedido = detallePedidoRepository.findById(idDetallePedido)
+                .orElseThrow(
+                        () -> new IllegalArgumentException("El detalle del pedido no existe")
+                );
+        Pedido pedido = detallePedido.getPedido();
+        if (pedido.getEstadoPedido() == EstadoPedido.CANCELADO || pedido.getEstadoPedido() == EstadoPedido.RECIBIDO){
+            throw new IllegalArgumentException(
+                    "No se puede eliminar un detalle de un pedido cancelado o recibido"
+            );
+        }
+        detallePedidoRepository.delete(detallePedido);
+        return detallePedido;
+    }
 }
