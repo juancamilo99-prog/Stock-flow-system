@@ -11,4 +11,5 @@ public interface DetalleRecepcionRepository extends JpaRepository<DetalleRecepci
 
     List<DetalleRecepcion> findByRecepcionId(Long idRecepcion);
     List<DetalleRecepcion> findByProductoId(Long idProducto);
+    boolean existsByRecepcionIdAndProductoId(Long idRecepcion, Long idProducto);
 }

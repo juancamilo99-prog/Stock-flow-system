@@ -27,10 +27,11 @@ public class DetalleRecepcion {
     @JoinColumn(name = "id_producto")
     private Producto producto;
 
-    public DetalleRecepcion(Integer cantidadEsperada, Integer cantidadRecibida, Recepcion recepcion, Producto producto) {
+    public DetalleRecepcion(Integer cantidadEsperada, Recepcion recepcion, Producto producto) {
         this.cantidadEsperada = cantidadEsperada;
-        this.cantidadRecibida = cantidadRecibida;
+        this.cantidadRecibida = 0;
         this.recepcion = recepcion;
         this.producto = producto;
     }
+
 }

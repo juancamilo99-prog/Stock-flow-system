@@ -1,7 +1,7 @@
 package org.jcdev.stockflow.backend.service;
 
-import org.jcdev.stockflow.backend.dto.ActualizarRecepcionDto;
-import org.jcdev.stockflow.backend.dto.CrearRecepcionDto;
+import jakarta.transaction.Transactional;
+import org.jcdev.stockflow.backend.dto.*;
 import org.jcdev.stockflow.backend.entity.*;
 import org.jcdev.stockflow.backend.enums.EstadoPedido;
 import org.jcdev.stockflow.backend.enums.EstadoRecepcion;
@@ -9,7 +9,9 @@ import org.jcdev.stockflow.backend.repository.*;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class RecepcionService {
@@ -19,20 +21,31 @@ public class RecepcionService {
     PedidoRepository pedidoRepository;
     EmpresaRepository empresaRepository;
     UsuarioRepository usuarioRepository;
+    ProductoRepository productoRepository;
+    DetallePedidoRepository detallePedidoRepository;
 
     public RecepcionService(RecepcionRepository recepcionRepository,  DetalleRecepcionRepository detalleRecepcionRepository,
                             PedidoRepository pedidoRepository, EmpresaRepository empresaRepository,
-                            UsuarioRepository usuarioRepository) {
+                            UsuarioRepository usuarioRepository, ProductoRepository productoRepository,  DetallePedidoRepository detallePedidoRepository) {
         this.recepcionRepository = recepcionRepository;
         this.detalleRecepcionRepository = detalleRecepcionRepository;
         this.pedidoRepository = pedidoRepository;
         this.empresaRepository = empresaRepository;
         this.usuarioRepository = usuarioRepository;
+        this.productoRepository = productoRepository;
+        this.detallePedidoRepository = detallePedidoRepository;
     }
 
     //ver todas las recepciones
     public List<Recepcion> obtenerRecepciones() {
         return recepcionRepository.findAll();
+    }
+
+    //ver una recepcion por identificador
+    public Recepcion obtenerRecepcionPorId(Long idRecepcion) {
+        return recepcionRepository.findById(idRecepcion).orElseThrow(
+                () -> new IllegalArgumentException("El recepcion no existe")
+        );
     }
 
     //crear una recepcion
@@ -88,11 +101,10 @@ public class RecepcionService {
     }
 
     //eliminar recepcion
-    public Recepcion eliminarRecepcion(Long idRecepcion) {
+    public void eliminarRecepcion(Long idRecepcion) {
         Recepcion recepcion = recepcionRepository.findById(idRecepcion)
                 .orElseThrow(() -> new IllegalArgumentException("El recepcion no existe"));
         recepcionRepository.delete(recepcion);
-        return recepcion;
     }
 
     //buscar el detalle de las recepciones por identificador
@@ -104,7 +116,94 @@ public class RecepcionService {
         return detalleRecepcionRepository.findByRecepcionId(idRecepcion);
     }
 
+    //obtener detalles por producto
     public List<DetalleRecepcion> obtenerDetallePorProductos(Long idProducto) {
         return detalleRecepcionRepository.findByProductoId(idProducto);
+    }
+
+    //crear un detalle de recepcion
+    @Transactional
+    public List<DetalleRecepcion> crearDetalleRecepcion(CrearDetalleRecepcionDto crearDetalleRecepcionDto) {
+        //buscamos la recepcion
+        Recepcion recepcion = recepcionRepository.findById(crearDetalleRecepcionDto.getIdRecepcion())
+                .orElseThrow(() -> new IllegalArgumentException("El recepcion no existe"));
+
+        if (recepcion.getEstadoRecepcion() == EstadoRecepcion.cancelado || recepcion.getEstadoRecepcion() == EstadoRecepcion.recibida) {
+            throw new IllegalArgumentException("No se pueden añadir productos a una recepcion cerrada.");
+        }
+
+        //nos traemos el id de pedido de la recepcion
+        Long idPedido = recepcion.getPedido().getId();
+        //nos traemos toda la lista de los detalles
+        List<DetallePedido> detallesPedido = detallePedidoRepository.findByPedidoId(idPedido);
+        if (detallesPedido.isEmpty()) {
+            throw new IllegalArgumentException("El pedido no tiene detalles.");
+        }
+
+        //creamos una lista vacia
+        List<DetalleRecepcion> detallesRecepcion = new ArrayList<>();
+
+        //recorremos los detalles de los pedidos
+        for (DetallePedido detallePedido : detallesPedido) {
+
+            //creamos un detalle de recepcion vacia
+            DetalleRecepcion detalleRecepcion = new DetalleRecepcion();
+
+            //guardamos la recepcion
+            detalleRecepcion.setRecepcion(recepcion);
+            //guardamos el producto del detalle del pedido
+            detalleRecepcion.setProducto(detallePedido.getProducto());
+
+            //nos traemos la cantidad solicitada del detalle del pedido
+            detalleRecepcion.setCantidadEsperada(detallePedido.getCantidadSolicitada());
+            //iniciamos en 0 la cantidad recibida
+            detalleRecepcion.setCantidadRecibida(0);
+            //guardamos toda la coleccion o lista
+            detallesRecepcion.add(detalleRecepcion);
+        }
+        //rotnarmos la lista al repository
+        return detalleRecepcionRepository.saveAll(detallesRecepcion);
+    }
+
+    //actualizar un detalle de pedido
+    @Transactional
+    public DetalleRecepcion actualizarDetalleRecepcion(Long idDetalleRecepcion, ActualizarDetalleRecepcionDto actualizarDetalleRecepcionDto) {
+
+        DetalleRecepcion detalleRecepcion = detalleRecepcionRepository.findById(idDetalleRecepcion)
+                .orElseThrow(() -> new IllegalArgumentException("El detalle de recepcion no existe"));
+
+        if (actualizarDetalleRecepcionDto.getCantidadRecibida() > detalleRecepcion.getCantidadEsperada()) {
+            throw new IllegalArgumentException("La cantidad no puede ser mayor que la cantidad de solicitada.");
+        }
+        detalleRecepcion.setCantidadRecibida(actualizarDetalleRecepcionDto.getCantidadRecibida());
+
+        //me traigo la recepcion
+        Recepcion recepcion = detalleRecepcion.getRecepcion();
+        //obtener todos los detalles asociados a la recepcion
+        List<DetalleRecepcion>detallesRecepcion = detalleRecepcionRepository.findByRecepcionId(recepcion.getId());
+
+        boolean todosCompletos = true;
+        boolean existeCantidadRecibida = false;
+
+        //recorremos los detalles de las recepciones
+        for (DetalleRecepcion detalle : detallesRecepcion) {
+            if (detalle.getCantidadRecibida() > 0){
+                existeCantidadRecibida = true;
+            }
+            if (!detalle.getCantidadRecibida().equals(detalle.getCantidadEsperada())){
+                todosCompletos = false;
+            }
+        }
+
+        if (todosCompletos) {
+            recepcion.setEstadoRecepcion(EstadoRecepcion.recibida);
+        }else if (existeCantidadRecibida) {
+            recepcion.setEstadoRecepcion(EstadoRecepcion.parcial);
+        }else {
+            recepcion.setEstadoRecepcion(EstadoRecepcion.pendiente);
+        }
+
+        recepcionRepository.save(recepcion);
+        return detalleRecepcion;
     }
 }
