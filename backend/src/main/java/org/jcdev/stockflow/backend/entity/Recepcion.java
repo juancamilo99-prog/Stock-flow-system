@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.jcdev.stockflow.backend.enums.EstadoRecepcion;
+import org.springframework.cglib.core.Local;
 
 import java.time.LocalDate;
 
@@ -32,12 +33,16 @@ public class Recepcion {
     @ManyToOne
     @JoinColumn(name = "id_usuario")
     private Usuario usuario;
+    @ManyToOne
+    @JoinColumn(name = "id_pedido")
+    private Pedido pedido;
 
-    public Recepcion(LocalDate fechaRecepcion, EstadoRecepcion estadoRecepcion, String observaciones, Empresa empresa, Usuario usuario) {
-        this.fechaRecepcion = fechaRecepcion;
-        this.estadoRecepcion = estadoRecepcion;
+    public Recepcion(String observaciones, Empresa empresa, Usuario usuario, Pedido pedido) {
+        this.fechaRecepcion = LocalDate.now();
+        this.estadoRecepcion = EstadoRecepcion.pendiente;
         this.observaciones = observaciones;
         this.empresa = empresa;
         this.usuario = usuario;
+        this.pedido = pedido;
     }
 }

@@ -1,13 +1,13 @@
 package org.jcdev.stockflow.backend.controller;
 
+import jakarta.validation.Valid;
+import org.jcdev.stockflow.backend.dto.ActualizarRecepcionDto;
+import org.jcdev.stockflow.backend.dto.CrearRecepcionDto;
 import org.jcdev.stockflow.backend.entity.DetallePedido;
 import org.jcdev.stockflow.backend.entity.DetalleRecepcion;
 import org.jcdev.stockflow.backend.entity.Recepcion;
 import org.jcdev.stockflow.backend.service.RecepcionService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -34,5 +34,23 @@ public class RecepcionController {
     @GetMapping(path = "/{idProducto}/producto")
     public List<DetalleRecepcion> obtenerDetallePorProducto(@PathVariable Long idProducto) {
         return recepcionService.obtenerDetallePorProductos(idProducto);
+    }
+
+    //crear recepcion
+    @PostMapping
+    public Recepcion crearRecepcion(@Valid @RequestBody CrearRecepcionDto crearRecepcionDto) {
+        return recepcionService.crearRecepcion(crearRecepcionDto);
+    }
+
+    //actualizar recepcion
+    @PatchMapping(path = "/{idRecepcion}")
+    public Recepcion actualizarRecepcion(@PathVariable Long idRecepcion,  @Valid @RequestBody ActualizarRecepcionDto actualizarRecepcionDto) {
+        return recepcionService.actualizarRecepcion(idRecepcion, actualizarRecepcionDto);
+    }
+
+    //eliminar recepcion
+    @DeleteMapping(path = "/{idRecepcion}")
+    public Recepcion eliminarRecepcion(@PathVariable Long idRecepcion) {
+        return recepcionService.eliminarRecepcion(idRecepcion);
     }
 }
