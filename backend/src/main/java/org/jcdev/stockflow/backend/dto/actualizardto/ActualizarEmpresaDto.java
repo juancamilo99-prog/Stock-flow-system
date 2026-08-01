@@ -1,7 +1,5 @@
-package org.jcdev.stockflow.backend.dto;
+package org.jcdev.stockflow.backend.dto.actualizardto;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -9,16 +7,7 @@ import org.jcdev.stockflow.backend.enums.TipoEmpresa;
 
 @Getter
 @Setter
-public class CrearEmpresaDto {
-
-    /*REGLAS DE NEGOCIO:
-    * 1. Nombre obligatorio
-    * 2. Email obligatorio y valido
-    * 3. Telefono opcional debe tener 9 digitos (español)
-    * 4. tipo obligatorio (PROVEEDOR O CLIENTE)
-    * 5. Activo por defecto
-    * 6. No puede eliminarse si tiene productos, pedidos o recepciones asociadas
-    * 7. se recomienda desactivarla antes que eliminarla*/
+public class ActualizarEmpresaDto {
 
     @NotBlank(message = "El nombre es obligatorio")
     @Size(min = 2 , max = 100, message = "El nombre debe tener entre 2 y 100 caracteres")
@@ -35,4 +24,5 @@ public class CrearEmpresaDto {
     private String direccion;
     @NotNull(message = "El tipo de empresa es obligatorio")
     private TipoEmpresa tipoEmpresa;
+    private Boolean activo;
 }

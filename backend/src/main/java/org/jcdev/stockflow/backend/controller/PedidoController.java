@@ -1,10 +1,10 @@
 package org.jcdev.stockflow.backend.controller;
 
 import jakarta.validation.Valid;
-import org.jcdev.stockflow.backend.dto.ActualizarDetallePedidoDto;
-import org.jcdev.stockflow.backend.dto.ActualizarPedidoDto;
-import org.jcdev.stockflow.backend.dto.CrearDetallePedidoDto;
-import org.jcdev.stockflow.backend.dto.CrearPedidoDto;
+import org.jcdev.stockflow.backend.dto.actualizardto.ActualizarDetallePedidoDto;
+import org.jcdev.stockflow.backend.dto.actualizardto.ActualizarPedidoDto;
+import org.jcdev.stockflow.backend.dto.creardto.CrearDetallePedidoDto;
+import org.jcdev.stockflow.backend.dto.creardto.CrearPedidoDto;
 import org.jcdev.stockflow.backend.entity.DetallePedido;
 import org.jcdev.stockflow.backend.entity.Pedido;
 import org.jcdev.stockflow.backend.service.PedidoService;

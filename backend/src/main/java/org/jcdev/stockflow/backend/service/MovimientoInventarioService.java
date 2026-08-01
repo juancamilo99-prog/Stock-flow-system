@@ -1,7 +1,7 @@
 package org.jcdev.stockflow.backend.service;
 
 import jakarta.transaction.Transactional;
-import org.jcdev.stockflow.backend.dto.AjusteInventarioDto;
+import org.jcdev.stockflow.backend.dto.creardto.AjusteInventarioDto;
 import org.jcdev.stockflow.backend.entity.MovimientoInventario;
 import org.jcdev.stockflow.backend.entity.Producto;
 import org.jcdev.stockflow.backend.entity.Usuario;
@@ -10,7 +10,6 @@ import org.jcdev.stockflow.backend.repository.MovimientoInventarioRepository;
 import org.jcdev.stockflow.backend.repository.ProductoRepository;
 import org.jcdev.stockflow.backend.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -63,34 +62,32 @@ public class MovimientoInventarioService {
                 .orElseThrow(
                         ()-> new IllegalArgumentException("El usuario no existe"));
 
-        if (ajusteInventarioDto.getTipoMovimiento() != TipoMovimiento.AJUSTE_POSITIVO
-        && ajusteInventarioDto.getTipoMovimiento() != TipoMovimiento.AJUSTE_NEGATIVO) {
-            throw new IllegalArgumentException("El ajuste debe ser positivo o negativo");
-        }
-
-        if (ajusteInventarioDto.getTipoMovimiento() == TipoMovimiento.AJUSTE_POSITIVO) {
-            producto.setStock(producto.getStock() + ajusteInventarioDto.getCantidad());
-            productoRepository.save(producto);
-        }
-        if (ajusteInventarioDto.getTipoMovimiento() == TipoMovimiento.AJUSTE_NEGATIVO){
-            if (ajusteInventarioDto.getCantidad() > producto.getStock()) {
-                throw new IllegalArgumentException("El ajuste no puede dejar el stock en negativo");
-            }
-            producto.setStock(producto.getStock() - ajusteInventarioDto.getCantidad());
-            productoRepository.save(producto);
-        }
-
-        if (ajusteInventarioDto.getCantidad() < 0){
-            throw new IllegalArgumentException("El ajuste no puede ser menor que 0");
-        }
+        Integer stockSistema = producto.getStock();
+        Integer stockReal = ajusteInventarioDto.getCantidad();
+        int diferenciaStock = stockReal - stockSistema;
 
         MovimientoInventario movimientoAjuste = new MovimientoInventario();
+        if (diferenciaStock>0){
+            movimientoAjuste.setTipoMovimiento(TipoMovimiento.AJUSTE_POSITIVO);
+            producto.setStock(stockReal);
+            productoRepository.save(producto);
+        }
+        if(diferenciaStock < 0){
+            movimientoAjuste.setTipoMovimiento(TipoMovimiento.AJUSTE_NEGATIVO);
+            if (stockReal > stockSistema){
+                throw new IllegalArgumentException("El ajuste no puede dejar el stock en negativo");
+            }
+            producto.setStock(stockReal);
+            productoRepository.save(producto);
+        }
+        if (diferenciaStock == 0){
+            throw new IllegalStateException("El stock real coincide con el stock del sistema");
+        }
         movimientoAjuste.setFechaMovimiento(LocalDate.now());
-        movimientoAjuste.setCantidad(ajusteInventarioDto.getCantidad());
+        movimientoAjuste.setCantidad(Math.abs(diferenciaStock));
         movimientoAjuste.setProducto(producto);
         movimientoAjuste.setUsuario(usuario);
         movimientoAjuste.setDescripcion(ajusteInventarioDto.getDescripcion());
-        movimientoAjuste.setTipoMovimiento(ajusteInventarioDto.getTipoMovimiento());
 
         return movimientoInventarioRepository.save(movimientoAjuste);
     }

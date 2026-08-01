@@ -1,4 +1,4 @@
-package org.jcdev.stockflow.backend.dto;
+package org.jcdev.stockflow.backend.dto.actualizardto;
 
 import jakarta.validation.constraints.Size;
 import lombok.Getter;

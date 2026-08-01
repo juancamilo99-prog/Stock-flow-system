@@ -1,6 +1,5 @@
-package org.jcdev.stockflow.backend.dto;
+package org.jcdev.stockflow.backend.dto.creardto;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Getter;

@@ -1,7 +1,7 @@
 package org.jcdev.stockflow.backend.service;
 
-import org.jcdev.stockflow.backend.dto.ActualizarEmpresaDto;
-import org.jcdev.stockflow.backend.dto.CrearEmpresaDto;
+import org.jcdev.stockflow.backend.dto.actualizardto.ActualizarEmpresaDto;
+import org.jcdev.stockflow.backend.dto.creardto.CrearEmpresaDto;
 import org.jcdev.stockflow.backend.entity.Empresa;
 import org.jcdev.stockflow.backend.entity.Producto;
 import org.jcdev.stockflow.backend.repository.EmpresaRepository;

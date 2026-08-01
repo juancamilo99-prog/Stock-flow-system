@@ -1,12 +1,9 @@
-package org.jcdev.stockflow.backend.dto;
+package org.jcdev.stockflow.backend.dto.creardto;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.time.LocalDate;
 
 @Getter
 @Setter

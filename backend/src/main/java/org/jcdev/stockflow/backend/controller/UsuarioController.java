@@ -1,8 +1,8 @@
 package org.jcdev.stockflow.backend.controller;
 
 import jakarta.validation.Valid;
-import org.jcdev.stockflow.backend.dto.ActualizarUsuarioDto;
-import org.jcdev.stockflow.backend.dto.CrearUsuarioDto;
+import org.jcdev.stockflow.backend.dto.actualizardto.ActualizarUsuarioDto;
+import org.jcdev.stockflow.backend.dto.creardto.CrearUsuarioDto;
 import org.jcdev.stockflow.backend.entity.Usuario;
 import org.jcdev.stockflow.backend.service.UsuarioService;
 import org.springframework.web.bind.annotation.*;

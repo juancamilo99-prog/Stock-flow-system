@@ -1,7 +1,10 @@
 package org.jcdev.stockflow.backend.service;
 
 import jakarta.transaction.Transactional;
-import org.jcdev.stockflow.backend.dto.*;
+import org.jcdev.stockflow.backend.dto.actualizardto.ActualizarDetalleRecepcionDto;
+import org.jcdev.stockflow.backend.dto.actualizardto.ActualizarRecepcionDto;
+import org.jcdev.stockflow.backend.dto.creardto.CrearDetalleRecepcionDto;
+import org.jcdev.stockflow.backend.dto.creardto.CrearRecepcionDto;
 import org.jcdev.stockflow.backend.entity.*;
 import org.jcdev.stockflow.backend.enums.EstadoPedido;
 import org.jcdev.stockflow.backend.enums.EstadoRecepcion;
@@ -80,7 +83,7 @@ public class RecepcionService {
     }
 
     //actualizar una recepcion
-    public Recepcion actualizarRecepcion(Long idRecepcion,ActualizarRecepcionDto actualizarRecepcionDto) {
+    public Recepcion actualizarRecepcion(Long idRecepcion, ActualizarRecepcionDto actualizarRecepcionDto) {
         Recepcion recepcion = recepcionRepository.findById(idRecepcion)
                 .orElseThrow(() -> new IllegalArgumentException("El recepcion no existe"));
         if (actualizarRecepcionDto.getObservaciones() != null && !actualizarRecepcionDto.getObservaciones().isBlank()) {

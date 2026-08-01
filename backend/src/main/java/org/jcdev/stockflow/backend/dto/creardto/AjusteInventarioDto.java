@@ -1,12 +1,10 @@
-package org.jcdev.stockflow.backend.dto;
+package org.jcdev.stockflow.backend.dto.creardto;
 
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
-import org.jcdev.stockflow.backend.enums.TipoMovimiento;
 
 @Getter
 @Setter
@@ -22,7 +20,5 @@ public class AjusteInventarioDto {
     private Long idProducto;
     @NotNull(message = "El usuario es obligatorio")
     private Long idUsuario;
-    @NotNull(message = "El tipo de movimiento es obligatorio")
-    private TipoMovimiento tipoMovimiento;
 
 }

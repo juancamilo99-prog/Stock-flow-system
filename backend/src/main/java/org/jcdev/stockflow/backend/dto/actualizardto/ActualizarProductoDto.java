@@ -1,13 +1,8 @@
-package org.jcdev.stockflow.backend.dto;
+package org.jcdev.stockflow.backend.dto.actualizardto;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
-import org.jcdev.stockflow.backend.entity.Categoria;
-import org.jcdev.stockflow.backend.entity.Empresa;
-import org.jcdev.stockflow.backend.entity.Ubicacion;
 
 import java.time.LocalDate;
 

@@ -2,8 +2,8 @@ package org.jcdev.stockflow.backend.controller;
 
 
 import jakarta.validation.Valid;
-import org.jcdev.stockflow.backend.dto.ActualizarProductoDto;
-import org.jcdev.stockflow.backend.dto.CrearProductoDto;
+import org.jcdev.stockflow.backend.dto.actualizardto.ActualizarProductoDto;
+import org.jcdev.stockflow.backend.dto.creardto.CrearProductoDto;
 import org.jcdev.stockflow.backend.entity.Producto;
 import org.jcdev.stockflow.backend.service.ProductoService;
 import org.springframework.web.bind.annotation.*;

@@ -1,20 +1,17 @@
 package org.jcdev.stockflow.backend.service;
 
-import org.jcdev.stockflow.backend.dto.ActualizarProductoDto;
-import org.jcdev.stockflow.backend.dto.CrearProductoDto;
+import org.jcdev.stockflow.backend.dto.actualizardto.ActualizarProductoDto;
+import org.jcdev.stockflow.backend.dto.creardto.CrearProductoDto;
 import org.jcdev.stockflow.backend.entity.*;
 import org.jcdev.stockflow.backend.repository.CategoriaRepository;
 import org.jcdev.stockflow.backend.repository.EmpresaRepository;
 import org.jcdev.stockflow.backend.repository.ProductoRepository;
 import org.jcdev.stockflow.backend.repository.UbicacionRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
-
-import static java.lang.Math.random;
 
 @Service
 public class ProductoService {
