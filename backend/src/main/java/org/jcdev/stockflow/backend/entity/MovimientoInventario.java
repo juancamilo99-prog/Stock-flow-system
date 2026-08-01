@@ -39,10 +39,10 @@ public class MovimientoInventario {
     @JoinColumn(name = "id_pedido")
     private Pedido pedido;
 
-    public MovimientoInventario(TipoMovimiento tipoMovimiento, Integer cantidad, LocalDate fechaMovimiento, String descripcion, Usuario usuario, Producto producto, Recepcion recepcion, Pedido pedido) {
+    public MovimientoInventario(TipoMovimiento tipoMovimiento, Integer cantidad, String descripcion, Usuario usuario, Producto producto, Recepcion recepcion, Pedido pedido) {
         this.tipoMovimiento = tipoMovimiento;
         this.cantidad = cantidad;
-        this.fechaMovimiento = fechaMovimiento;
+        this.fechaMovimiento = LocalDate.now();
         this.descripcion = descripcion;
         this.usuario = usuario;
         this.producto = producto;

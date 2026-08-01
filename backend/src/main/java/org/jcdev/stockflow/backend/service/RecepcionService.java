@@ -5,13 +5,12 @@ import org.jcdev.stockflow.backend.dto.*;
 import org.jcdev.stockflow.backend.entity.*;
 import org.jcdev.stockflow.backend.enums.EstadoPedido;
 import org.jcdev.stockflow.backend.enums.EstadoRecepcion;
+import org.jcdev.stockflow.backend.enums.TipoMovimiento;
 import org.jcdev.stockflow.backend.repository.*;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class RecepcionService {
@@ -23,10 +22,14 @@ public class RecepcionService {
     UsuarioRepository usuarioRepository;
     ProductoRepository productoRepository;
     DetallePedidoRepository detallePedidoRepository;
+    MovimientoInventarioRepository movimientoInventarioRepository;
+    //service
+    ProductoService productoService;
 
     public RecepcionService(RecepcionRepository recepcionRepository,  DetalleRecepcionRepository detalleRecepcionRepository,
                             PedidoRepository pedidoRepository, EmpresaRepository empresaRepository,
-                            UsuarioRepository usuarioRepository, ProductoRepository productoRepository,  DetallePedidoRepository detallePedidoRepository) {
+                            UsuarioRepository usuarioRepository, ProductoRepository productoRepository,  DetallePedidoRepository detallePedidoRepository,
+                            ProductoService productoService, MovimientoInventarioRepository movimientoInventarioRepository) {
         this.recepcionRepository = recepcionRepository;
         this.detalleRecepcionRepository = detalleRecepcionRepository;
         this.pedidoRepository = pedidoRepository;
@@ -34,6 +37,8 @@ public class RecepcionService {
         this.usuarioRepository = usuarioRepository;
         this.productoRepository = productoRepository;
         this.detallePedidoRepository = detallePedidoRepository;
+        this.productoService = productoService;
+        this.movimientoInventarioRepository = movimientoInventarioRepository;
     }
 
     //ver todas las recepciones
@@ -172,19 +177,41 @@ public class RecepcionService {
         DetalleRecepcion detalleRecepcion = detalleRecepcionRepository.findById(idDetalleRecepcion)
                 .orElseThrow(() -> new IllegalArgumentException("El detalle de recepcion no existe"));
 
-        if (actualizarDetalleRecepcionDto.getCantidadRecibida() > detalleRecepcion.getCantidadEsperada()) {
-            throw new IllegalArgumentException("La cantidad no puede ser mayor que la cantidad de solicitada.");
-        }
-        detalleRecepcion.setCantidadRecibida(actualizarDetalleRecepcionDto.getCantidadRecibida());
+
+        //guardamos el valor anterior antes de modificar la entidad
+        Integer cantidadAnterior = detalleRecepcion.getCantidadRecibida();
+        Integer cantidadNueva = actualizarDetalleRecepcionDto.getCantidadRecibida();
+        //validamos las cantidades
+        validarCantidades(cantidadAnterior,cantidadNueva, detalleRecepcion.getCantidadEsperada());
+        //calculamos la diferencia
+        int diferencia = cantidadNueva - cantidadAnterior;
+        //actualizamos
+        detalleRecepcion.setCantidadRecibida(cantidadNueva);
 
         //me traigo la recepcion
         Recepcion recepcion = detalleRecepcion.getRecepcion();
+
+        if (diferencia > 0 ){
+            Producto producto = detalleRecepcion.getProducto();
+            producto.setStock(
+                    producto.getStock() + diferencia
+            );
+            productoRepository.save(producto);
+
+            MovimientoInventario movimientoInventario = new MovimientoInventario();
+            movimientoInventario.setTipoMovimiento(TipoMovimiento.ENTRADA);
+            movimientoInventario.setCantidad(diferencia);
+            movimientoInventario.setProducto(detalleRecepcion.getProducto());
+            movimientoInventario.setRecepcion(detalleRecepcion.getRecepcion());
+            movimientoInventario.setUsuario(recepcion.getUsuario());
+            movimientoInventarioRepository.save(movimientoInventario);
+        }
+
+        detalleRecepcionRepository.save(detalleRecepcion);
         //obtener todos los detalles asociados a la recepcion
         List<DetalleRecepcion>detallesRecepcion = detalleRecepcionRepository.findByRecepcionId(recepcion.getId());
-
         boolean todosCompletos = true;
         boolean existeCantidadRecibida = false;
-
         //recorremos los detalles de las recepciones
         for (DetalleRecepcion detalle : detallesRecepcion) {
             if (detalle.getCantidadRecibida() > 0){
@@ -204,6 +231,19 @@ public class RecepcionService {
         }
 
         recepcionRepository.save(recepcion);
-        return detalleRecepcion;
+        return  detalleRecepcion;
+    }
+
+    private void validarCantidades(Integer cantidadAnterior, Integer cantidadNueva, Integer cantidadEsperada) {
+        if (cantidadNueva > cantidadEsperada) {
+            throw new IllegalArgumentException(
+                    "La cantidad recibida no puede superar la cantidad esperada"
+            );
+        }
+        if (cantidadNueva < cantidadAnterior) {
+            throw new IllegalArgumentException(
+                    "La cantidad recibida no puede reducirse"
+            );
+        }
     }
 }
