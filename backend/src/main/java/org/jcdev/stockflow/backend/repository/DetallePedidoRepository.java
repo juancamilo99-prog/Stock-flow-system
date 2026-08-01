@@ -13,5 +13,4 @@ public interface DetallePedidoRepository extends JpaRepository<DetallePedido, Lo
     List<DetallePedido> findByPedidoId(Long idPedido);
     //existe este producto dentro de este pedido?
     boolean existsByPedidoIdAndProductoId(Long idPedido, Long idProducto);
-    Optional<DetallePedido> findByPedidoIdAndProductoId(Long idPedido, Long idProducto);
 }

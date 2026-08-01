@@ -9,8 +9,10 @@ import org.jcdev.stockflow.backend.enums.TipoMovimiento;
 import org.jcdev.stockflow.backend.repository.*;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class RecepcionService {
@@ -198,13 +200,25 @@ public class RecepcionService {
             );
             productoRepository.save(producto);
 
-            MovimientoInventario movimientoInventario = new MovimientoInventario();
-            movimientoInventario.setTipoMovimiento(TipoMovimiento.ENTRADA);
-            movimientoInventario.setCantidad(diferencia);
-            movimientoInventario.setProducto(detalleRecepcion.getProducto());
-            movimientoInventario.setRecepcion(detalleRecepcion.getRecepcion());
-            movimientoInventario.setUsuario(recepcion.getUsuario());
-            movimientoInventarioRepository.save(movimientoInventario);
+
+            Optional<MovimientoInventario> movimientoExiste = movimientoInventarioRepository.findByRecepcionIdAndProductoIdAndTipoMovimiento(
+                    recepcion.getId(),producto.getId(), TipoMovimiento.ENTRADA
+            );
+            if (movimientoExiste.isPresent()) {
+                MovimientoInventario movimientoInventarioExistente = movimientoExiste.get();
+                movimientoInventarioExistente.setCantidad(movimientoInventarioExistente.getCantidad() + diferencia);
+                movimientoInventarioRepository.save(movimientoInventarioExistente);
+            } else {
+                MovimientoInventario movimientoInventarioNuevo = new MovimientoInventario();
+                movimientoInventarioNuevo.setTipoMovimiento(TipoMovimiento.ENTRADA);
+                movimientoInventarioNuevo.setCantidad(diferencia);
+                movimientoInventarioNuevo.setProducto(detalleRecepcion.getProducto());
+                movimientoInventarioNuevo.setRecepcion(detalleRecepcion.getRecepcion());
+                movimientoInventarioNuevo.setUsuario(recepcion.getUsuario());
+                movimientoInventarioNuevo.setDescripcion(recepcion.getObservaciones());
+                movimientoInventarioNuevo.setFechaMovimiento(LocalDate.now());
+                movimientoInventarioRepository.save(movimientoInventarioNuevo);
+            }
         }
 
         detalleRecepcionRepository.save(detalleRecepcion);
