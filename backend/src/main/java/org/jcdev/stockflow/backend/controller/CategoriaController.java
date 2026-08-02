@@ -6,6 +6,8 @@ import org.jcdev.stockflow.backend.entity.Categoria;
 import org.jcdev.stockflow.backend.entity.Producto;
 import org.jcdev.stockflow.backend.repository.CategoriaRepository;
 import org.jcdev.stockflow.backend.service.CategoriaService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,26 +23,31 @@ public class CategoriaController {
     }
 
     //obtener todas las categorias
-    @GetMapping(path = "/")
-    public List<Categoria> obtenerCategorias(){
-        return categoriaService.obtenerCategorias();
+    @GetMapping
+    public ResponseEntity<List<Categoria>> obtenerCategorias(){
+        List<Categoria> categoria = categoriaService.obtenerCategorias();
+        return ResponseEntity.ok(categoria);
     }
 
     //obtener los productos por las categorias
     @GetMapping(path = "/{idCategoria}/productos")
-    public List<Producto> obtenerProductosPorCategoria(@PathVariable Long idCategoria){
-        return categoriaService.obtenerProductosPorCategoria(idCategoria);
+    public ResponseEntity<List<Producto>> obtenerProductosPorCategoria(@PathVariable Long idCategoria){
+        List<Producto> productos = categoriaService.obtenerProductosPorCategoria(idCategoria);
+        return ResponseEntity.ok(productos);
     }
 
     //crear una categoria
     @PostMapping
-    public Categoria crearCategoria(@Valid @RequestBody CrearCategoriaDto crearCategoriaDto) {
-        return categoriaService.crearCategoria(crearCategoriaDto);
+    public ResponseEntity<Categoria> crearCategoria(@Valid @RequestBody CrearCategoriaDto crearCategoriaDto) {
+        Categoria categoria = categoriaService.crearCategoria(crearCategoriaDto);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(categoria);
     }
 
     //actualizar
-    @PatchMapping
-    public Categoria actualizarCategoria(@PathVariable Long idCategoria, @Valid @RequestBody CrearCategoriaDto crearCategoriaDto) {
-        return categoriaService.actualizarCategoria(idCategoria, crearCategoriaDto);
+    @PatchMapping(path = "/{idCategoria}")
+    public ResponseEntity<Categoria> actualizarCategoria(@PathVariable Long idCategoria, @Valid @RequestBody CrearCategoriaDto crearCategoriaDto) {
+        Categoria categoria = categoriaService.actualizarCategoria(idCategoria, crearCategoriaDto);
+        return ResponseEntity.ok(categoria);
     }
 }
