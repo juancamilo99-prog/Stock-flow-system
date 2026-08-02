@@ -43,11 +43,11 @@ public class Incidencia {
     private Recepcion recepcion;
 
 
-    public Incidencia(TipoIncidencia tipoIncidencia, String descripcion, LocalDate fechaIncidencia, EstadoIncidencia estadoIncidencia, Usuario usuario, Producto producto, Pedido pedido, Recepcion recepcion) {
+    public Incidencia(TipoIncidencia tipoIncidencia, String descripcion, Usuario usuario, Producto producto, Pedido pedido, Recepcion recepcion) {
         this.tipoIncidencia = tipoIncidencia;
         this.descripcion = descripcion;
-        this.fechaIncidencia = fechaIncidencia;
-        this.estadoIncidencia = estadoIncidencia;
+        this.fechaIncidencia = LocalDate.now();
+        this.estadoIncidencia = EstadoIncidencia.pendiente;
         this.usuario = usuario;
         this.producto = producto;
         this.pedido = pedido;
