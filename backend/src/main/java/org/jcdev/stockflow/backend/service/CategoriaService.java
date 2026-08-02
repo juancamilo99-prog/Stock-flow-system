@@ -44,4 +44,24 @@ public class CategoriaService {
         Categoria categoria = new Categoria(nombre);
         return categoriaRepository.save(categoria);
     }
+
+    //actualizar una categoria
+    public Categoria actualizarCategoria(Long idCategoria, CrearCategoriaDto crearCategoriaDto) {
+        Categoria categoria = categoriaRepository.findById(idCategoria)
+                .orElseThrow(() -> new IllegalArgumentException("La categoria no existe: "+idCategoria));
+
+        String nombre = crearCategoriaDto.getNombre().trim();
+
+        if (categoria.getNombre().equalsIgnoreCase(nombre)) {
+            throw new IllegalArgumentException(
+                    "El nuevo nombre debe ser diferente del nombre actual"
+            );
+        }
+
+        if (categoriaRepository.existsByNombreIgnoreCase(crearCategoriaDto.getNombre())) {
+            throw new IllegalArgumentException("Ya existe una categoria con el nombre "+crearCategoriaDto.getNombre());
+        }
+        categoria.setNombre(nombre);
+        return categoriaRepository.save(categoria);
+    }
 }

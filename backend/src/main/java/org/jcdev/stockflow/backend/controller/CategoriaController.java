@@ -37,4 +37,10 @@ public class CategoriaController {
     public Categoria crearCategoria(@Valid @RequestBody CrearCategoriaDto crearCategoriaDto) {
         return categoriaService.crearCategoria(crearCategoriaDto);
     }
+
+    //actualizar
+    @PatchMapping
+    public Categoria actualizarCategoria(@PathVariable Long idCategoria, @Valid @RequestBody CrearCategoriaDto crearCategoriaDto) {
+        return categoriaService.actualizarCategoria(idCategoria, crearCategoriaDto);
+    }
 }
