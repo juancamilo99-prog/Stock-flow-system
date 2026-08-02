@@ -1,5 +1,6 @@
 package org.jcdev.stockflow.backend.service;
 
+import org.jcdev.stockflow.backend.dto.creardto.CrearCategoriaDto;
 import org.jcdev.stockflow.backend.entity.Categoria;
 import org.jcdev.stockflow.backend.entity.Producto;
 import org.jcdev.stockflow.backend.repository.CategoriaRepository;
@@ -21,6 +22,7 @@ public class CategoriaService {
         this.categoriaRepository = categoriaRepository;
     }
 
+    //obtener todas las categorias
     public List<Categoria> obtenerCategorias(){
         return categoriaRepository.findAll();
     }
@@ -31,5 +33,15 @@ public class CategoriaService {
                 throw new IllegalArgumentException("La categoria no existe: "+idCategoria);
             }
         return productoRepository.findByCategoriaId(idCategoria);
+    }
+
+    //crear una categoria
+    public Categoria crearCategoria(CrearCategoriaDto crearCategoriaDto) {
+        String nombre = crearCategoriaDto.getNombre().trim();
+        if (categoriaRepository.existsByNombreIgnoreCase(crearCategoriaDto.getNombre())) {
+            throw new IllegalArgumentException("La categoria ya existe: "+crearCategoriaDto.getNombre());
+        }
+        Categoria categoria = new Categoria(nombre);
+        return categoriaRepository.save(categoria);
     }
 }

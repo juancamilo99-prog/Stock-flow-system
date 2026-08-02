@@ -1,5 +1,6 @@
 package org.jcdev.stockflow.backend.service;
 
+import org.jcdev.stockflow.backend.dto.actualizardto.ActualizarIncidenciaDto;
 import org.jcdev.stockflow.backend.dto.creardto.CrearIncidenciaDto;
 import org.jcdev.stockflow.backend.entity.*;
 import org.jcdev.stockflow.backend.enums.EstadoIncidencia;
@@ -15,14 +16,12 @@ public class IncidenciaService {
     private final IncidenciaRepository incidenciaRepository;
     private final UsuarioRepository usuarioRepository;
     private final ProductoRepository productoRepository;
-    private final PedidoRepository pedidoRepository;
     private final RecepcionRepository recepcionRepository;
 
-    public IncidenciaService(IncidenciaRepository incidenciaRepository, UsuarioRepository usuarioRepository, ProductoRepository productoRepository, PedidoRepository pedidoRepository, RecepcionRepository recepcionRepository) {
+    public IncidenciaService(IncidenciaRepository incidenciaRepository, UsuarioRepository usuarioRepository, ProductoRepository productoRepository, RecepcionRepository recepcionRepository) {
         this.incidenciaRepository = incidenciaRepository;
         this.usuarioRepository = usuarioRepository;
         this.productoRepository = productoRepository;
-        this.pedidoRepository = pedidoRepository;
         this.recepcionRepository = recepcionRepository;
     }
 
@@ -89,6 +88,39 @@ public class IncidenciaService {
                 crearIncidenciaDto.getDescripcion(),
                 usuario, producto, recepcion != null ? recepcion.getPedido() : null ,recepcion
         );
+        return incidenciaRepository.save(incidencia);
+    }
+
+    //actualizar una incidencia
+    public Incidencia actualizarIncidencia(Long idIncidencia,ActualizarIncidenciaDto actualizarIncidenciaDto) {
+        //buscamos la incidencia
+        Incidencia incidencia = incidenciaRepository.findById(idIncidencia)
+                .orElseThrow(() -> new IllegalArgumentException("Incidencia no encontrada"));
+
+        if (actualizarIncidenciaDto.getDescripcion() != null) {
+            if (actualizarIncidenciaDto.getDescripcion().isBlank()){
+                throw new IllegalArgumentException("La Descripción no puede estar vacia");
+            }
+            incidencia.setDescripcion(actualizarIncidenciaDto.getDescripcion());
+        }
+
+        EstadoIncidencia estadoActual = incidencia.getEstadoIncidencia();
+        EstadoIncidencia estadoNuevo = actualizarIncidenciaDto.getEstadoIncidencia();
+
+        if (estadoNuevo != null && estadoNuevo != estadoActual) {
+            switch (estadoActual) {
+                case resuelta -> throw new IllegalArgumentException("Una incidencia resuelta no puede cambiar de estado");
+                case en_proceso -> {
+                    if (estadoNuevo == EstadoIncidencia.pendiente){
+                        throw new IllegalArgumentException(
+                                "Una incidencia en proceso no puede volver a pendiente"
+                        );
+                    }
+                }
+            }
+            incidencia.setEstadoIncidencia(estadoNuevo);
+        }
+
         return incidenciaRepository.save(incidencia);
     }
 }

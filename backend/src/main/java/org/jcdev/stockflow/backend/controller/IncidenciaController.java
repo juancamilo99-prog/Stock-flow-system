@@ -1,6 +1,7 @@
 package org.jcdev.stockflow.backend.controller;
 
 import jakarta.validation.Valid;
+import org.jcdev.stockflow.backend.dto.actualizardto.ActualizarIncidenciaDto;
 import org.jcdev.stockflow.backend.dto.creardto.CrearIncidenciaDto;
 import org.jcdev.stockflow.backend.entity.Incidencia;
 import org.jcdev.stockflow.backend.entity.Usuario;
@@ -64,12 +65,21 @@ public class IncidenciaController {
         return ResponseEntity.ok(incidenciasPorEstado);
     }
 
+    //crear una incidencia
     @PostMapping
     public ResponseEntity<Incidencia> crearIncidencia(@Valid @RequestBody CrearIncidenciaDto crearIncidenciaDto) {
         Incidencia crearIncidencia = incidenciaService.crearIncidencia(crearIncidenciaDto);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(crearIncidencia);
     }
+
+    //actualizar una incidencia
+    @PatchMapping(path = "/{idIncidencia}")
+    public ResponseEntity<Incidencia> actualizarIncidencia(@PathVariable Long idIncidencia, @Valid @RequestBody ActualizarIncidenciaDto actualizarIncidenciaDto) {
+        Incidencia incidencia = incidenciaService.actualizarIncidencia(idIncidencia, actualizarIncidenciaDto);
+        return ResponseEntity.ok(incidencia);
+    }
+
 
 
 }
