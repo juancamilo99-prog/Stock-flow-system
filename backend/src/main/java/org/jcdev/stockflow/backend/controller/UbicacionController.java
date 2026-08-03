@@ -1,10 +1,13 @@
 package org.jcdev.stockflow.backend.controller;
 
+import jakarta.validation.Valid;
 import org.jcdev.stockflow.backend.dto.actualizardto.ActualizarUbicacionDto;
 import org.jcdev.stockflow.backend.dto.creardto.CrearUbicacionDto;
 import org.jcdev.stockflow.backend.entity.Producto;
 import org.jcdev.stockflow.backend.entity.Ubicacion;
 import org.jcdev.stockflow.backend.service.UbicacionService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,26 +23,31 @@ public class UbicacionController {
     }
 
     //obtener ubicaciones
-    @GetMapping(path = "/")
-    public List<Ubicacion> obtenerUbicaciones() {
-        return ubicacionService.obtenerUbicaciones();
+    @GetMapping
+    public ResponseEntity<List<Ubicacion>> obtenerUbicaciones() {
+        List<Ubicacion> ubicaciones = ubicacionService.obtenerUbicaciones();
+        return ResponseEntity.ok(ubicaciones);
     }
 
     //obtener ubicaciones por productos
     @GetMapping(path = "/{idUbicacion}/productos")
-    public List<Producto> obtenerProductosPorUbicacion(@PathVariable Long idUbicacion) {
-        return ubicacionService.obtenerProductosPorUbicacion(idUbicacion);
+    public ResponseEntity<List<Producto>> obtenerProductosPorUbicacion(@PathVariable Long idUbicacion) {
+        List<Producto> producto = ubicacionService.obtenerProductosPorUbicacion(idUbicacion);
+        return ResponseEntity.ok(producto);
     }
 
     //crear una ubicacion
     @PostMapping
-    public Ubicacion crearUbicacion(CrearUbicacionDto crearUbicacionDto) {
-        return ubicacionService.crearUbicacion(crearUbicacionDto);
+    public ResponseEntity<Ubicacion> crearUbicacion(@Valid @RequestBody CrearUbicacionDto crearUbicacionDto) {
+        Ubicacion ubicacion = ubicacionService.crearUbicacion(crearUbicacionDto);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ubicacion);
     }
 
     //actualizar una ubicacion
     @PatchMapping(path = "/{idUbicacion}")
-    public Ubicacion actualizarUbicacion(Long idUbicacion,ActualizarUbicacionDto updateUbicacionDto) {
-        return ubicacionService.actualizarUbicacion(idUbicacion, updateUbicacionDto);
+    public ResponseEntity<Ubicacion> actualizarUbicacion(@PathVariable Long idUbicacion,@Valid @RequestBody ActualizarUbicacionDto actualizarUbicacionDto) {
+        Ubicacion ubicacion = ubicacionService.actualizarUbicacion(idUbicacion, actualizarUbicacionDto);
+        return ResponseEntity.ok(ubicacion);
     }
 }
