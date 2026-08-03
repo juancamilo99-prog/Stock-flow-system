@@ -1,5 +1,6 @@
 package org.jcdev.stockflow.backend.service;
 
+import org.jcdev.stockflow.backend.dto.creardto.CrearUbicacionDto;
 import org.jcdev.stockflow.backend.entity.Categoria;
 import org.jcdev.stockflow.backend.entity.Producto;
 import org.jcdev.stockflow.backend.entity.Ubicacion;
@@ -32,5 +33,18 @@ public class UbicacionService {
                         new IllegalArgumentException("La ubicacion no existe"+idUbicacion
                         ));
         return productoRepository.findByUbicacionId(ubicacion.getId());
+    }
+
+    //crear una ubicacion
+    public Ubicacion crearUbicacion(CrearUbicacionDto crearUbicacionDto){
+        String codigo = crearUbicacionDto.getCodigo().trim().toUpperCase();
+        String descripcion = crearUbicacionDto.getDescripcion().trim();
+        if (ubicacionRepository.existsByCodigoIgnoreCase(codigo)) {
+            throw new IllegalArgumentException("La ubicacion ya existe: "+codigo);
+        }
+        Ubicacion ubicacion = new Ubicacion();
+        ubicacion.setCodigo(codigo);
+        ubicacion.setDescripcion(descripcion);
+        return ubicacionRepository.save(ubicacion);
     }
 }

@@ -38,7 +38,7 @@ public class CategoriaService {
     //crear una categoria
     public Categoria crearCategoria(CrearCategoriaDto crearCategoriaDto) {
         String nombre = crearCategoriaDto.getNombre().trim();
-        if (categoriaRepository.existsByNombreIgnoreCase(crearCategoriaDto.getNombre())) {
+        if (categoriaRepository.existsByNombreIgnoreCase(nombre)) {
             throw new IllegalArgumentException("La categoria ya existe: "+crearCategoriaDto.getNombre());
         }
         Categoria categoria = new Categoria(nombre);

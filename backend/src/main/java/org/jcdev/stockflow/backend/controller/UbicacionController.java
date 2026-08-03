@@ -1,12 +1,10 @@
 package org.jcdev.stockflow.backend.controller;
 
+import org.jcdev.stockflow.backend.dto.creardto.CrearUbicacionDto;
 import org.jcdev.stockflow.backend.entity.Producto;
 import org.jcdev.stockflow.backend.entity.Ubicacion;
 import org.jcdev.stockflow.backend.service.UbicacionService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -30,5 +28,11 @@ public class UbicacionController {
     @GetMapping(path = "/{idUbicacion}/productos")
     public List<Producto> obtenerProductosPorUbicacion(@PathVariable Long idUbicacion) {
         return ubicacionService.obtenerProductosPorUbicacion(idUbicacion);
+    }
+
+    //crear una ubicacion
+    @PostMapping
+    public Ubicacion crearUbicacion(CrearUbicacionDto crearUbicacionDto) {
+        return ubicacionService.crearUbicacion(crearUbicacionDto);
     }
 }
