@@ -1,5 +1,6 @@
 package org.jcdev.stockflow.backend.controller;
 
+import org.jcdev.stockflow.backend.dto.actualizardto.ActualizarUbicacionDto;
 import org.jcdev.stockflow.backend.dto.creardto.CrearUbicacionDto;
 import org.jcdev.stockflow.backend.entity.Producto;
 import org.jcdev.stockflow.backend.entity.Ubicacion;
@@ -34,5 +35,11 @@ public class UbicacionController {
     @PostMapping
     public Ubicacion crearUbicacion(CrearUbicacionDto crearUbicacionDto) {
         return ubicacionService.crearUbicacion(crearUbicacionDto);
+    }
+
+    //actualizar una ubicacion
+    @PatchMapping(path = "/{idUbicacion}")
+    public Ubicacion actualizarUbicacion(Long idUbicacion,ActualizarUbicacionDto updateUbicacionDto) {
+        return ubicacionService.actualizarUbicacion(idUbicacion, updateUbicacionDto);
     }
 }
