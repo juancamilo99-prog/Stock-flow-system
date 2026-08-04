@@ -1,11 +1,10 @@
 package org.jcdev.stockflow.backend.controller;
 
+import jakarta.validation.Valid;
+import org.jcdev.stockflow.backend.dto.creardto.CrearTareaDto;
 import org.jcdev.stockflow.backend.entity.Tarea;
 import org.jcdev.stockflow.backend.service.TareaService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -41,5 +40,11 @@ public class TareaController {
     @GetMapping(path = "/{idRecepcion}/recepcion")
     public List<Tarea> obtenerTareasPorRecepcion(@PathVariable Long idRecepcion){
         return tareaService.obtenerTareaPorRecepcion(idRecepcion);
+    }
+
+    //crear tarea
+    @PostMapping
+    public Tarea crearTarea(@Valid @RequestBody CrearTareaDto crearTareaDto){
+        return  tareaService.crearTarea(crearTareaDto);
     }
 }

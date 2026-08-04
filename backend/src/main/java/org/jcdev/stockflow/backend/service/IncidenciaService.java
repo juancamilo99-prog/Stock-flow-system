@@ -75,7 +75,7 @@ public class IncidenciaService {
                     .orElseThrow(() -> new IllegalArgumentException("Recepcion no encontrada"));
         }
 
-        //validamos que este asociada a algun pedido, producto o recepcion
+        //validamos que este asociada a algun producto o recepcion
         if (producto == null && recepcion == null) {
             throw new IllegalArgumentException(
                     "La incidencia debe estar asociada a un producto o una recepción"
