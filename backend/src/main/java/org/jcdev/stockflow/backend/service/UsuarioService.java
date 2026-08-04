@@ -3,7 +3,7 @@ package org.jcdev.stockflow.backend.service;
 import org.jcdev.stockflow.backend.dto.actualizardto.ActualizarUsuarioDto;
 import org.jcdev.stockflow.backend.dto.creardto.CrearUsuarioDto;
 import org.jcdev.stockflow.backend.entity.Usuario;
-import org.jcdev.stockflow.backend.enums.Rol;
+import org.jcdev.stockflow.backend.enums.usuario.Rol;
 import org.jcdev.stockflow.backend.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
 

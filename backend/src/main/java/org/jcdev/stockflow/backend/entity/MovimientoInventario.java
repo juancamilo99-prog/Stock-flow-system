@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.jcdev.stockflow.backend.enums.TipoMovimiento;
+import org.jcdev.stockflow.backend.enums.movimiento.TipoMovimiento;
 
 import java.time.LocalDate;
 

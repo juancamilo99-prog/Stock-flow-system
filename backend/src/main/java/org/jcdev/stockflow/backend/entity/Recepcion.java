@@ -4,8 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.jcdev.stockflow.backend.enums.EstadoRecepcion;
-import org.springframework.cglib.core.Local;
+import org.jcdev.stockflow.backend.enums.recepcion.EstadoRecepcion;
 
 import java.time.LocalDate;
 

@@ -4,8 +4,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.jcdev.stockflow.backend.enums.EstadoTarea;
-import org.jcdev.stockflow.backend.enums.TipoTarea;
+import org.jcdev.stockflow.backend.enums.tarea.EstadoTarea;
+import org.jcdev.stockflow.backend.enums.tarea.TipoTarea;
 
 import java.time.LocalDate;
 
@@ -24,7 +24,7 @@ public class Tarea{
     private TipoTarea tipoTarea;
     private String descripcion;
     @Column(name = "fecha_tarea")
-    private LocalDate fechaTarea;
+    private LocalDate fechaCreacion;
     @Enumerated(EnumType.STRING)
     @Column(name = "estado")
     private EstadoTarea estadoTarea;
@@ -39,11 +39,11 @@ public class Tarea{
     @JoinColumn(name = "id_recepcion")
     private Recepcion recepcion;
 
-    public Tarea(TipoTarea tipoTarea, String descripcion, LocalDate fechaTarea, EstadoTarea estadoTarea, Usuario usuario, Pedido pedido, Recepcion recepcion) {
+    public Tarea(TipoTarea tipoTarea, String descripcion, Usuario usuario, Pedido pedido, Recepcion recepcion) {
         this.tipoTarea = tipoTarea;
         this.descripcion = descripcion;
-        this.fechaTarea = fechaTarea;
-        this.estadoTarea = estadoTarea;
+        this.fechaCreacion = LocalDate.now();
+        this.estadoTarea = EstadoTarea.pendiente;
         this.usuario = usuario;
         this.pedido = pedido;
         this.recepcion = recepcion;

@@ -3,11 +3,10 @@ package org.jcdev.stockflow.backend.service;
 import org.jcdev.stockflow.backend.dto.actualizardto.ActualizarIncidenciaDto;
 import org.jcdev.stockflow.backend.dto.creardto.CrearIncidenciaDto;
 import org.jcdev.stockflow.backend.entity.*;
-import org.jcdev.stockflow.backend.enums.EstadoIncidencia;
+import org.jcdev.stockflow.backend.enums.incidencia.EstadoIncidencia;
 import org.jcdev.stockflow.backend.repository.*;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @Service

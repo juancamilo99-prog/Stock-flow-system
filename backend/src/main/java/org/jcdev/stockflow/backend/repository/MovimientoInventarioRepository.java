@@ -1,7 +1,7 @@
 package org.jcdev.stockflow.backend.repository;
 
 import org.jcdev.stockflow.backend.entity.MovimientoInventario;
-import org.jcdev.stockflow.backend.enums.TipoMovimiento;
+import org.jcdev.stockflow.backend.enums.movimiento.TipoMovimiento;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

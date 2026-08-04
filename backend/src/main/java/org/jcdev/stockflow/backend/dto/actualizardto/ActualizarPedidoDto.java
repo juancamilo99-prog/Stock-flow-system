@@ -3,7 +3,7 @@ package org.jcdev.stockflow.backend.dto.actualizardto;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
-import org.jcdev.stockflow.backend.enums.EstadoPedido;
+import org.jcdev.stockflow.backend.enums.pedido.EstadoPedido;
 
 @Getter
 @Setter

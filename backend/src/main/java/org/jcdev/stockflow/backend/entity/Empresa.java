@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Email;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.jcdev.stockflow.backend.enums.TipoEmpresa;
+import org.jcdev.stockflow.backend.enums.empresa.TipoEmpresa;
 
 @Entity
 @Getter

@@ -5,7 +5,7 @@ import org.jcdev.stockflow.backend.dto.creardto.AjusteInventarioDto;
 import org.jcdev.stockflow.backend.entity.MovimientoInventario;
 import org.jcdev.stockflow.backend.entity.Producto;
 import org.jcdev.stockflow.backend.entity.Usuario;
-import org.jcdev.stockflow.backend.enums.TipoMovimiento;
+import org.jcdev.stockflow.backend.enums.movimiento.TipoMovimiento;
 import org.jcdev.stockflow.backend.repository.MovimientoInventarioRepository;
 import org.jcdev.stockflow.backend.repository.ProductoRepository;
 import org.jcdev.stockflow.backend.repository.UsuarioRepository;

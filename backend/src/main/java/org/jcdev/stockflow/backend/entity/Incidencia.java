@@ -4,8 +4,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.jcdev.stockflow.backend.enums.EstadoIncidencia;
-import org.jcdev.stockflow.backend.enums.TipoIncidencia;
+import org.jcdev.stockflow.backend.enums.incidencia.EstadoIncidencia;
+import org.jcdev.stockflow.backend.enums.incidencia.TipoIncidencia;
 
 import java.time.LocalDate;
 

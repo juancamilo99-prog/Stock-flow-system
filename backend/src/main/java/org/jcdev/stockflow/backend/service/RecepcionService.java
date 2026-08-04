@@ -6,9 +6,9 @@ import org.jcdev.stockflow.backend.dto.actualizardto.ActualizarRecepcionDto;
 import org.jcdev.stockflow.backend.dto.creardto.CrearDetalleRecepcionDto;
 import org.jcdev.stockflow.backend.dto.creardto.CrearRecepcionDto;
 import org.jcdev.stockflow.backend.entity.*;
-import org.jcdev.stockflow.backend.enums.EstadoPedido;
-import org.jcdev.stockflow.backend.enums.EstadoRecepcion;
-import org.jcdev.stockflow.backend.enums.TipoMovimiento;
+import org.jcdev.stockflow.backend.enums.pedido.EstadoPedido;
+import org.jcdev.stockflow.backend.enums.recepcion.EstadoRecepcion;
+import org.jcdev.stockflow.backend.enums.movimiento.TipoMovimiento;
 import org.jcdev.stockflow.backend.repository.*;
 import org.springframework.stereotype.Service;
 

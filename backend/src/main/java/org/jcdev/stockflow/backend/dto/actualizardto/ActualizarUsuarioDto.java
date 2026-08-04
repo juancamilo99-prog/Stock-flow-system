@@ -8,7 +8,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
-import org.jcdev.stockflow.backend.enums.Rol;
+import org.jcdev.stockflow.backend.enums.usuario.Rol;
 
 @Getter
 @Setter

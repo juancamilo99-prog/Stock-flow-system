@@ -3,7 +3,7 @@ package org.jcdev.stockflow.backend.dto.actualizardto;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.jcdev.stockflow.backend.enums.TipoEmpresa;
+import org.jcdev.stockflow.backend.enums.empresa.TipoEmpresa;
 
 @Getter
 @Setter

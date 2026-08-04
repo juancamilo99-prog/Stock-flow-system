@@ -5,7 +5,7 @@ import org.jcdev.stockflow.backend.dto.actualizardto.ActualizarPedidoDto;
 import org.jcdev.stockflow.backend.dto.creardto.CrearDetallePedidoDto;
 import org.jcdev.stockflow.backend.dto.creardto.CrearPedidoDto;
 import org.jcdev.stockflow.backend.entity.*;
-import org.jcdev.stockflow.backend.enums.EstadoPedido;
+import org.jcdev.stockflow.backend.enums.pedido.EstadoPedido;
 import org.jcdev.stockflow.backend.repository.*;
 import org.springframework.stereotype.Service;
 
