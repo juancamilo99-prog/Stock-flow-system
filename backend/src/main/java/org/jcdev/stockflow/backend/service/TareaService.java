@@ -50,6 +50,17 @@ public class TareaService {
         return tareaRepository.findByRecepcionId(idRecepcion);
     }
 
+    //obtener las tareas por su estado
+    public List<Tarea> obtenerTareasPorEstadoTarea(EstadoTarea estadoTarea){
+      List<Tarea> tareas = tareaRepository.findByEstadoTarea(estadoTarea);
+      if (tareas.isEmpty()){
+          throw new IllegalArgumentException(
+                  "No existe tareas con el estado: " + estadoTarea
+          );
+      }
+      return tareas;
+    }
+
     //crear una tarea
     public Tarea crearTarea(CrearTareaDto crearTareaDto){
         Tarea tarea = new Tarea();
