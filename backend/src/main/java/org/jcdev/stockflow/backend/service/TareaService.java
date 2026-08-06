@@ -6,6 +6,7 @@ import org.jcdev.stockflow.backend.entity.Recepcion;
 import org.jcdev.stockflow.backend.entity.Tarea;
 import org.jcdev.stockflow.backend.entity.Usuario;
 import org.jcdev.stockflow.backend.enums.tarea.EstadoTarea;
+import org.jcdev.stockflow.backend.enums.tarea.PrioridadTarea;
 import org.jcdev.stockflow.backend.repository.PedidoRepository;
 import org.jcdev.stockflow.backend.repository.RecepcionRepository;
 import org.jcdev.stockflow.backend.repository.TareaRepository;
@@ -59,6 +60,17 @@ public class TareaService {
           );
       }
       return tareas;
+    }
+
+    //obtener tareas por su prioridad
+    public List<Tarea> obtenerTareasPorPrioridadTarea(PrioridadTarea prioridadTarea){
+        List<Tarea> tareas = tareaRepository.findByPrioridadTarea(prioridadTarea);
+        if (tareas.isEmpty()){
+            throw new IllegalArgumentException(
+                    "No existen tareas con la prioridad: " + prioridadTarea
+            );
+        }
+        return tareas;
     }
 
     //crear una tarea
