@@ -1,6 +1,7 @@
 package org.jcdev.stockflow.backend.controller;
 
 import jakarta.validation.Valid;
+import org.jcdev.stockflow.backend.dto.actualizardto.ActualizarTareaDto;
 import org.jcdev.stockflow.backend.dto.creardto.CrearTareaDto;
 import org.jcdev.stockflow.backend.entity.Tarea;
 import org.jcdev.stockflow.backend.enums.tarea.EstadoTarea;
@@ -70,5 +71,12 @@ public class TareaController {
         Tarea tarea = tareaService.crearTarea(crearTareaDto);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(tarea);
+    }
+
+    //actualizar tarea
+    @PatchMapping(path = "/{idTarea}")
+    public ResponseEntity<Tarea> actualizarTarea(@PathVariable Long idTarea, @Valid @RequestBody ActualizarTareaDto actualizarTareaDto){
+        Tarea tarea = tareaService.actualizarTarea(idTarea, actualizarTareaDto);
+        return ResponseEntity.ok(tarea);
     }
 }

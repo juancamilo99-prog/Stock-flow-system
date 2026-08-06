@@ -1,5 +1,6 @@
 package org.jcdev.stockflow.backend.service;
 
+import org.jcdev.stockflow.backend.dto.actualizardto.ActualizarTareaDto;
 import org.jcdev.stockflow.backend.dto.creardto.CrearTareaDto;
 import org.jcdev.stockflow.backend.entity.Pedido;
 import org.jcdev.stockflow.backend.entity.Recepcion;
@@ -106,6 +107,42 @@ public class TareaService {
         tarea.setTipoTarea(crearTareaDto.getTipoTarea());
         tarea.setDescripcion(crearTareaDto.getDescripcion().trim());
         tarea.setPrioridadTarea(crearTareaDto.getPrioridadTarea());
+        return tareaRepository.save(tarea);
+    }
+
+    //actualizar una tarea
+    public Tarea actualizarTarea(Long idTarea,ActualizarTareaDto actualizarTareaDto){
+        Tarea tarea = tareaRepository.findById(idTarea)
+                .orElseThrow(() -> new IllegalArgumentException("La tarea no existe"));
+
+        if (actualizarTareaDto.getDescripcion() != null){
+            String descripcionNueva = actualizarTareaDto.getDescripcion().trim();
+            if (descripcionNueva.isBlank()){
+                throw new IllegalArgumentException("La descripcion no puede estar vacia");
+            }
+            tarea.setDescripcion(descripcionNueva);
+        }
+        if (actualizarTareaDto.getPrioridad() != null){
+            tarea.setPrioridadTarea(actualizarTareaDto.getPrioridad());
+        }
+        EstadoTarea estadoNuevo = actualizarTareaDto.getEstado();
+        EstadoTarea estadoActual = tarea.getEstadoTarea();
+
+        if (estadoNuevo != null && estadoNuevo != estadoActual){
+            switch (estadoActual){
+                case resuelta -> throw new IllegalArgumentException(
+                        "Una tarea resuelta no puede cambiar de estado"
+                );
+                case en_proceso -> {
+                    if (estadoNuevo == EstadoTarea.pendiente){
+                        throw new IllegalArgumentException(
+                                "Una tarea en proceso no puede volver a estar pendiente"
+                        );
+                    }
+                }
+            }
+            tarea.setEstadoTarea(estadoNuevo);
+        }
         return tareaRepository.save(tarea);
     }
 }
