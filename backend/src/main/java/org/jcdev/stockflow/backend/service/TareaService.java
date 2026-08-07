@@ -1,11 +1,14 @@
 package org.jcdev.stockflow.backend.service;
 
+import jakarta.transaction.Transactional;
 import org.jcdev.stockflow.backend.dto.actualizardto.ActualizarTareaDto;
 import org.jcdev.stockflow.backend.dto.creardto.CrearTareaDto;
 import org.jcdev.stockflow.backend.entity.Pedido;
 import org.jcdev.stockflow.backend.entity.Recepcion;
 import org.jcdev.stockflow.backend.entity.Tarea;
 import org.jcdev.stockflow.backend.entity.Usuario;
+import org.jcdev.stockflow.backend.enums.auditoria.EntidadAuditoria;
+import org.jcdev.stockflow.backend.enums.auditoria.TipoAccion;
 import org.jcdev.stockflow.backend.enums.tarea.EstadoTarea;
 import org.jcdev.stockflow.backend.enums.tarea.PrioridadTarea;
 import org.jcdev.stockflow.backend.repository.PedidoRepository;
@@ -15,6 +18,7 @@ import org.jcdev.stockflow.backend.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -24,12 +28,14 @@ public class TareaService {
     private final UsuarioRepository usuarioRepository;
     private final RecepcionRepository recepcionRepository;
     private final PedidoRepository pedidoRepository;
+    private final AuditoriaService auditoriaService;
 
-    public TareaService(TareaRepository tareaRepository, UsuarioRepository usuarioRepository, RecepcionRepository recepcionRepository, PedidoRepository pedidoRepository) {
+    public TareaService(TareaRepository tareaRepository, UsuarioRepository usuarioRepository, RecepcionRepository recepcionRepository, PedidoRepository pedidoRepository, AuditoriaService auditoriaService) {
         this.tareaRepository = tareaRepository;
         this.usuarioRepository = usuarioRepository;
         this.recepcionRepository = recepcionRepository;
         this.pedidoRepository = pedidoRepository;
+        this.auditoriaService = auditoriaService;
     }
 
     //obtener todas las tareas
@@ -75,6 +81,7 @@ public class TareaService {
     }
 
     //crear una tarea
+    @Transactional
     public Tarea crearTarea(CrearTareaDto crearTareaDto){
         Tarea tarea = new Tarea();
         if (crearTareaDto.getIdPedido() != null && crearTareaDto.getIdRecepcion() != null) {
@@ -107,23 +114,46 @@ public class TareaService {
         tarea.setTipoTarea(crearTareaDto.getTipoTarea());
         tarea.setDescripcion(crearTareaDto.getDescripcion().trim());
         tarea.setPrioridadTarea(crearTareaDto.getPrioridadTarea());
-        return tareaRepository.save(tarea);
+        tarea = tareaRepository.save(tarea);
+
+        //registrar una auditoria
+        auditoriaService.registrarAuditoria(
+                TipoAccion.CREAR,
+                EntidadAuditoria.TAREA,
+                "Se ha creado una tarea",
+                tarea.getId(),
+                tarea.getUsuario()
+        );
+
+        return tarea;
     }
 
     //actualizar una tarea
+    @Transactional
     public Tarea actualizarTarea(Long idTarea,ActualizarTareaDto actualizarTareaDto){
         Tarea tarea = tareaRepository.findById(idTarea)
                 .orElseThrow(() -> new IllegalArgumentException("La tarea no existe"));
+        boolean seCambioEstado = false;
+        boolean detectarCambio = false;
 
         if (actualizarTareaDto.getDescripcion() != null){
+            String descripcionActual = tarea.getDescripcion().trim();
             String descripcionNueva = actualizarTareaDto.getDescripcion().trim();
             if (descripcionNueva.isBlank()){
                 throw new IllegalArgumentException("La descripcion no puede estar vacia");
             }
-            tarea.setDescripcion(descripcionNueva);
+            if (!descripcionNueva.equals(descripcionActual)){
+                tarea.setDescripcion(descripcionNueva);
+                detectarCambio = true;
+            }
         }
         if (actualizarTareaDto.getPrioridad() != null){
-            tarea.setPrioridadTarea(actualizarTareaDto.getPrioridad());
+            PrioridadTarea prioridadActual = tarea.getPrioridadTarea();
+            PrioridadTarea prioridadNueva = actualizarTareaDto.getPrioridad();
+            if (prioridadNueva != prioridadActual){
+                tarea.setPrioridadTarea(prioridadNueva);
+                detectarCambio = true;
+            }
         }
         EstadoTarea estadoNuevo = actualizarTareaDto.getEstado();
         EstadoTarea estadoActual = tarea.getEstadoTarea();
@@ -142,7 +172,30 @@ public class TareaService {
                 }
             }
             tarea.setEstadoTarea(estadoNuevo);
+            seCambioEstado = true;
         }
-        return tareaRepository.save(tarea);
+        tarea = tareaRepository.save(tarea);
+
+        if (seCambioEstado) {
+            //registrar Auditoria
+            auditoriaService.registrarAuditoria(
+                    TipoAccion.ACTUALIZAR,
+                    EntidadAuditoria.TAREA,
+                    "La tarea cambio el estado de " + estadoActual + " a estado " + estadoNuevo,
+                    tarea.getId(),
+                    tarea.getUsuario()
+            );
+        }
+        if (detectarCambio) {
+            //registrar Auditoria
+            auditoriaService.registrarAuditoria(
+                    TipoAccion.ACTUALIZAR,
+                    EntidadAuditoria.TAREA,
+                    "Se ha Actualizado una tarea",
+                    tarea.getId(),
+                    tarea.getUsuario()
+            );
+        }
+        return tarea;
     }
 }
