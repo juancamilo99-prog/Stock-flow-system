@@ -5,5 +5,6 @@ public enum TipoAccion {
     ACTUALIZAR,
     CAMBIAR_ESTADO,
     AJUSTAR_STOCK,
-    DESACTIVAR
+    DESACTIVAR,
+    ELIMINAR
 }

@@ -18,12 +18,10 @@ import java.util.List;
 public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
-    private final AuditoriaRepository auditoriaRepository;
     private final AuditoriaService auditoriaService;
 
-    public UsuarioService(UsuarioRepository usuarioRepository, AuditoriaRepository auditoriaRepository, AuditoriaService auditoriaService) {
+    public UsuarioService(UsuarioRepository usuarioRepository, AuditoriaService auditoriaService) {
         this.usuarioRepository = usuarioRepository;
-        this.auditoriaRepository = auditoriaRepository;
         this.auditoriaService = auditoriaService;
     }
 
@@ -154,11 +152,21 @@ public class UsuarioService {
     }
 
     // eliminar un usuario
+    /* Los usuarios se desactivan en lugar de eliminarse, para preservar la integridad y trazabilidad historicas */
+    @Transactional
     public Usuario eliminarUsuario(Long idUsuario){
         Usuario usuario = usuarioRepository.findById(idUsuario).orElseThrow(
                 () -> new IllegalArgumentException("El usuario no existe")
         );
         usuarioRepository.delete(usuario);
+        //TODO se refactorizara cuando implementemos Spring Security
+        auditoriaService.registrarAuditoria(
+                TipoAccion.ELIMINAR,
+                EntidadAuditoria.USUARIO,
+                "Se ha eliminado el usuario",
+                usuario.getId(),
+                usuario
+        );
         return usuario;
     }
 }
