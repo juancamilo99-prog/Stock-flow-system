@@ -1,10 +1,13 @@
 package org.jcdev.stockflow.backend.service;
 
+import jakarta.transaction.Transactional;
 import org.jcdev.stockflow.backend.dto.actualizardto.ActualizarDetallePedidoDto;
 import org.jcdev.stockflow.backend.dto.actualizardto.ActualizarPedidoDto;
 import org.jcdev.stockflow.backend.dto.creardto.CrearDetallePedidoDto;
 import org.jcdev.stockflow.backend.dto.creardto.CrearPedidoDto;
 import org.jcdev.stockflow.backend.entity.*;
+import org.jcdev.stockflow.backend.enums.auditoria.EntidadAuditoria;
+import org.jcdev.stockflow.backend.enums.auditoria.TipoAccion;
 import org.jcdev.stockflow.backend.enums.pedido.EstadoPedido;
 import org.jcdev.stockflow.backend.repository.*;
 import org.springframework.stereotype.Service;
@@ -20,12 +23,16 @@ public class PedidoService {
     private final UsuarioRepository usuarioRepository;
     private final ProductoRepository productoRepository;
 
-    public PedidoService(PedidoRepository pedidoRepository, DetallePedidoRepository detallePedidoRepository, EmpresaRepository empresaRepository, UsuarioRepository usuarioRepository, ProductoRepository productoRepository) {
+    //servicios
+    private final AuditoriaService auditoriaService;
+
+    public PedidoService(PedidoRepository pedidoRepository, DetallePedidoRepository detallePedidoRepository, EmpresaRepository empresaRepository, UsuarioRepository usuarioRepository, ProductoRepository productoRepository, AuditoriaService auditoriaService) {
         this.pedidoRepository = pedidoRepository;
         this.detallePedidoRepository = detallePedidoRepository;
         this.empresaRepository = empresaRepository;
         this.usuarioRepository = usuarioRepository;
         this.productoRepository = productoRepository;
+        this.auditoriaService = auditoriaService;
     }
 
     //obtener todos los pedidos
@@ -62,13 +69,22 @@ public class PedidoService {
     }
 
     //crear pedido
+    @Transactional
     public Pedido crearPedido(CrearPedidoDto crearPedidoDto){
         Empresa empresa = empresaRepository.findById(crearPedidoDto.getIdEmpresa())
                     .orElseThrow(() -> new IllegalArgumentException("El empresa no existe"));
         Usuario usuario = usuarioRepository.findById(crearPedidoDto.getIdUsuario())
                 .orElseThrow(() -> new IllegalArgumentException("El usuario no existe"));
         Pedido pedido = new Pedido(crearPedidoDto.getObservaciones(), empresa, usuario);
-        return pedidoRepository.save(pedido);
+        pedido = pedidoRepository.save(pedido);
+        auditoriaService.registrarAuditoria(
+                TipoAccion.CREAR,
+                EntidadAuditoria.PEDIDO,
+                "Se ha creado un pedido nuevo para la empresa "+empresa.getNombre(),
+                pedido.getId(),
+                pedido.getUsuario()
+        );
+        return pedido;
     }
 
     //actualizar pedido
