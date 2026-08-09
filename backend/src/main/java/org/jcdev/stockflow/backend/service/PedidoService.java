@@ -94,38 +94,21 @@ public class PedidoService {
         if (actualizarPedidoDto.getObservaciones() != null && !actualizarPedidoDto.getObservaciones().isBlank()) {
             pedido.setObservaciones(actualizarPedidoDto.getObservaciones());
         }
-        if (actualizarPedidoDto.getEstadoPedido() != null){
-            if (pedido.getEstadoPedido() == EstadoPedido.RECIBIDO && actualizarPedidoDto.getEstadoPedido() == EstadoPedido.PENDIENTE) {
-                throw new IllegalArgumentException(
-                        "Un pedido recibido no puede volver a estar pendiente"
-                );
+
+        //refactorizacion
+        EstadoPedido estadoNuevo = actualizarPedidoDto.getEstadoPedido();
+        EstadoPedido estadoActual = pedido.getEstadoPedido();
+        if (estadoNuevo != null &&  estadoNuevo != estadoActual) {
+            switch (estadoActual){
+                case RECIBIDO -> throw new IllegalArgumentException("Un pedido recibido no puede cambiar de estado");
+                case CANCELADO -> throw new IllegalArgumentException("Un pedido cancelado no puede cambiar de estado");
+                case PARCIAL -> {
+                    if (estadoNuevo != EstadoPedido.RECIBIDO) {
+                        throw new IllegalArgumentException("Un pedido en estado parcial, solo puede cambiar de estado a recibido.");
+                    }
+                }
             }
-            if (pedido.getEstadoPedido() == EstadoPedido.CANCELADO && actualizarPedidoDto.getEstadoPedido() == EstadoPedido.RECIBIDO) {
-                throw new IllegalArgumentException(
-                        "Un pedido cancelado no puede estar recibido"
-                );
-            }
-            if (pedido.getEstadoPedido() == EstadoPedido.CANCELADO &&  actualizarPedidoDto.getEstadoPedido() == EstadoPedido.PENDIENTE) {
-                throw new IllegalArgumentException(
-                        "Un pedido cancelado no puede volver a estar en pendiente"
-                );
-            }
-            if (pedido.getEstadoPedido() == EstadoPedido.RECIBIDO &&  actualizarPedidoDto.getEstadoPedido() == EstadoPedido.CANCELADO) {
-                throw new IllegalArgumentException(
-                        "Un pedido recibido no puede cancelarse"
-                );
-            }
-            if (pedido.getEstadoPedido() == EstadoPedido.CANCELADO &&  actualizarPedidoDto.getEstadoPedido() == EstadoPedido.PARCIAL) {
-                throw new IllegalArgumentException(
-                        "Un pedido cancelado no puede pasar a estado parcial"
-                );
-            }
-            if (pedido.getEstadoPedido() == EstadoPedido.RECIBIDO && actualizarPedidoDto.getEstadoPedido() == EstadoPedido.PARCIAL){
-                throw new IllegalArgumentException(
-                        "Un pedido recibido no puede volver a estar parcial"
-                );
-            }
-            pedido.setEstadoPedido(actualizarPedidoDto.getEstadoPedido());
+            pedido.setEstadoPedido(estadoNuevo);
         }
         return pedidoRepository.save(pedido);
     }
