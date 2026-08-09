@@ -146,6 +146,7 @@ public class PedidoService {
     }
 
     //eliminar pedido
+    @Transactional
     public Pedido eliminarPedido(Long idPedido){
         Pedido pedido = pedidoRepository.findById(idPedido)
                 .orElseThrow(() -> new IllegalArgumentException("El pedido no existe"));
