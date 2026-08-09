@@ -150,6 +150,14 @@ public class PedidoService {
         Pedido pedido = pedidoRepository.findById(idPedido)
                 .orElseThrow(() -> new IllegalArgumentException("El pedido no existe"));
         pedidoRepository.delete(pedido);
+        //auditoria
+        auditoriaService.registrarAuditoria(
+                TipoAccion.ELIMINAR,
+                EntidadAuditoria.PEDIDO,
+                "Se ha eliminado un pedido.",
+                pedido.getId(),
+                pedido.getUsuario()
+        );
         return pedido;
     }
 
