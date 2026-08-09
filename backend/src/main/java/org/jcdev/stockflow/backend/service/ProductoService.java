@@ -1,8 +1,11 @@
 package org.jcdev.stockflow.backend.service;
 
+import jakarta.transaction.Transactional;
 import org.jcdev.stockflow.backend.dto.actualizardto.ActualizarProductoDto;
 import org.jcdev.stockflow.backend.dto.creardto.CrearProductoDto;
 import org.jcdev.stockflow.backend.entity.*;
+import org.jcdev.stockflow.backend.enums.auditoria.EntidadAuditoria;
+import org.jcdev.stockflow.backend.enums.auditoria.TipoAccion;
 import org.jcdev.stockflow.backend.repository.CategoriaRepository;
 import org.jcdev.stockflow.backend.repository.EmpresaRepository;
 import org.jcdev.stockflow.backend.repository.ProductoRepository;
@@ -23,12 +26,16 @@ public class ProductoService {
     private final UbicacionRepository ubicacionRepository;
     private static final String PREFIJO_CODIGO = "COD";
 
+    //servicios
+    private final AuditoriaService auditoriaService;
+
     //creamos el constructor y le pasamos el repository
-    public ProductoService(ProductoRepository productoRepository, EmpresaRepository empresaRepository, CategoriaRepository categoriaRepository, UbicacionRepository ubicacionRepository) {
+    public ProductoService(ProductoRepository productoRepository, EmpresaRepository empresaRepository, CategoriaRepository categoriaRepository, UbicacionRepository ubicacionRepository, AuditoriaService auditoriaService) {
         this.productoRepository = productoRepository;
         this.empresaRepository = empresaRepository;
         this.categoriaRepository = categoriaRepository;
         this.ubicacionRepository = ubicacionRepository;
+        this.auditoriaService = auditoriaService;
     }
 
 
@@ -57,8 +64,9 @@ public class ProductoService {
     }
 
     //crear un producto
+    @Transactional
     public Producto crearProducto(CrearProductoDto crearProductoDto){
-
+        //validamos que la fecha de caducidad no sea inferior a la de producción
         if (crearProductoDto.getFechaCaducidad().isBefore(crearProductoDto.getFechaProduccion())){
             throw  new IllegalArgumentException("la fecha de caducidad debe ser posterior a la fecha de produccion");
         }
@@ -95,8 +103,15 @@ public class ProductoService {
         //generar codigo de barras
         producto.setCodigoBarras(generarCodigoBarras());
 
-        return productoRepository.save(producto);
-
+        producto = productoRepository.save(producto);
+        auditoriaService.registrarAuditoria(
+                TipoAccion.CREAR,
+                EntidadAuditoria.PRODUCTO,
+                "Se ha creado un producto nuevo "+producto.getId(),
+                producto.getId(),
+                null
+        );
+        return producto;
     }
 
     //actualizar un producto
@@ -145,7 +160,8 @@ public class ProductoService {
             producto.setActivo(actualizarProductoDto.getActivo());
         }
 
-        return productoRepository.save(producto);
+        producto = productoRepository.save(producto);
+        return producto;
     }
 
     //eliminar un producto
