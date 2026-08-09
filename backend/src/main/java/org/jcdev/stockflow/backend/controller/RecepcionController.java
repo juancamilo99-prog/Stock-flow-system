@@ -46,7 +46,7 @@ public class RecepcionController {
 
     @GetMapping(path = "/{idProducto}/producto")
     public ResponseEntity<List<DetalleRecepcion>> obtenerDetallePorProducto(@PathVariable Long idProducto) {
-        List<DetalleRecepcion> detalleRecepciones = recepcionService.obtenerDetalleRecepciones(idProducto);
+        List<DetalleRecepcion> detalleRecepciones = recepcionService.obtenerDetallePorProductos(idProducto);
         return ResponseEntity.ok(detalleRecepciones);
     }
 

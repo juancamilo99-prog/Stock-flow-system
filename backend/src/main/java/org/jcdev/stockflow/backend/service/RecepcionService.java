@@ -6,6 +6,8 @@ import org.jcdev.stockflow.backend.dto.actualizardto.ActualizarRecepcionDto;
 import org.jcdev.stockflow.backend.dto.creardto.CrearDetalleRecepcionDto;
 import org.jcdev.stockflow.backend.dto.creardto.CrearRecepcionDto;
 import org.jcdev.stockflow.backend.entity.*;
+import org.jcdev.stockflow.backend.enums.auditoria.EntidadAuditoria;
+import org.jcdev.stockflow.backend.enums.auditoria.TipoAccion;
 import org.jcdev.stockflow.backend.enums.pedido.EstadoPedido;
 import org.jcdev.stockflow.backend.enums.recepcion.EstadoRecepcion;
 import org.jcdev.stockflow.backend.enums.movimiento.TipoMovimiento;
@@ -20,6 +22,7 @@ import java.util.Optional;
 @Service
 public class RecepcionService {
 
+    //repositorys
     RecepcionRepository recepcionRepository;
     DetalleRecepcionRepository detalleRecepcionRepository;
     PedidoRepository pedidoRepository;
@@ -30,11 +33,13 @@ public class RecepcionService {
     MovimientoInventarioRepository movimientoInventarioRepository;
     //service
     ProductoService productoService;
+    AuditoriaService auditoriaService;
+
 
     public RecepcionService(RecepcionRepository recepcionRepository,  DetalleRecepcionRepository detalleRecepcionRepository,
                             PedidoRepository pedidoRepository, EmpresaRepository empresaRepository,
                             UsuarioRepository usuarioRepository, ProductoRepository productoRepository,  DetallePedidoRepository detallePedidoRepository,
-                            ProductoService productoService, MovimientoInventarioRepository movimientoInventarioRepository) {
+                            ProductoService productoService, MovimientoInventarioRepository movimientoInventarioRepository, AuditoriaService auditoriaService) {
         this.recepcionRepository = recepcionRepository;
         this.detalleRecepcionRepository = detalleRecepcionRepository;
         this.pedidoRepository = pedidoRepository;
@@ -44,6 +49,7 @@ public class RecepcionService {
         this.detallePedidoRepository = detallePedidoRepository;
         this.productoService = productoService;
         this.movimientoInventarioRepository = movimientoInventarioRepository;
+        this.auditoriaService = auditoriaService;
     }
 
     //ver todas las recepciones
@@ -59,6 +65,7 @@ public class RecepcionService {
     }
 
     //crear una recepcion
+    @Transactional
     public Recepcion crearRecepcion(CrearRecepcionDto crearRecepcionDto) {
         Pedido pedido = pedidoRepository.findById(crearRecepcionDto.getIdPedido())
                 .orElseThrow(
@@ -79,35 +86,74 @@ public class RecepcionService {
             throw new IllegalArgumentException("No se puede crear una recepcion para un pedido cancelado o recibido");
         }
         Recepcion recepcion = new Recepcion(crearRecepcionDto.getObservaciones(), empresa, usuario, pedido);
-        return  recepcionRepository.save(recepcion);
+        recepcion = recepcionRepository.save(recepcion);
+        auditoriaService.registrarAuditoria(
+                TipoAccion.CREAR,
+                EntidadAuditoria.RECEPCION,
+                "Se ha creado una recepcion nueva.",
+                recepcion.getId(),
+                recepcion.getUsuario()
+        );
+        return recepcion;
     }
 
     //actualizar una recepcion
+    @Transactional
     public Recepcion actualizarRecepcion(Long idRecepcion, ActualizarRecepcionDto actualizarRecepcionDto) {
         Recepcion recepcion = recepcionRepository.findById(idRecepcion)
                 .orElseThrow(() -> new IllegalArgumentException("El recepcion no existe"));
+        boolean detectarCambio = false;
+        boolean cambioEstado = false;
         if (actualizarRecepcionDto.getObservaciones() != null && !actualizarRecepcionDto.getObservaciones().isBlank()) {
-            recepcion.setObservaciones(actualizarRecepcionDto.getObservaciones());
+            String descripcionNueva = actualizarRecepcionDto.getObservaciones().trim();
+            String descripcionActual = recepcion.getObservaciones().trim();
+            if (!descripcionNueva.equals(descripcionActual)) {
+                recepcion.setObservaciones(descripcionNueva);
+                detectarCambio = true;
+            }
         }
+        //estados de la recepcion
         EstadoRecepcion actualEstado = recepcion.getEstadoRecepcion();
         EstadoRecepcion nuevoEstado = actualizarRecepcionDto.getEstadoRecepcion();
 
-        if (nuevoEstado != null) {
-            if (actualEstado == EstadoRecepcion.cancelado &&
-            nuevoEstado != EstadoRecepcion.cancelado) {
-                throw new IllegalArgumentException("La recepcion esta cancelado.");
-            }
-            if (actualEstado == EstadoRecepcion.recibida &&
-            nuevoEstado != EstadoRecepcion.recibida) {
-                throw new IllegalArgumentException("La recepcion ya esta recibido.");
-            }
-            if (actualEstado == EstadoRecepcion.parcial &&
-            nuevoEstado == EstadoRecepcion.pendiente){
-                throw new IllegalArgumentException("Pedido no puede regresar a estado pendiente.");
+        if (nuevoEstado != null && nuevoEstado != actualEstado) {
+            switch (actualEstado) {
+                case cancelado -> throw new IllegalArgumentException("Una recepcion cancelada no puede cambiar de estado");
+                case recibida ->  throw new IllegalArgumentException("Una recepcion recibida no puede cambiar de estado");
+                case parcial -> {
+                    if (nuevoEstado != EstadoRecepcion.recibida){
+                        throw new IllegalArgumentException("Una recepcion parcial solo puede cambiar a estado recibido.");
+                    }
+                }
             }
             recepcion.setEstadoRecepcion(nuevoEstado);
+            cambioEstado = true;
         }
-        return recepcionRepository.save(recepcion);
+        if (cambioEstado || detectarCambio) {
+            recepcion = recepcionRepository.save(recepcion);
+        }else {
+            throw new IllegalArgumentException("No se detecto ningún cambio");
+        }
+        if (cambioEstado){
+            auditoriaService.registrarAuditoria(
+                    TipoAccion.ACTUALIZAR,
+                    EntidadAuditoria.RECEPCION,
+                    "Se modificado el estado de la recepcion "+recepcion.getId()+" de "+actualEstado+" a "+nuevoEstado,
+                    recepcion.getId(),
+                    recepcion.getUsuario()
+            );
+        }
+        if (detectarCambio) {
+            auditoriaService.registrarAuditoria(
+                    TipoAccion.ACTUALIZAR,
+                    EntidadAuditoria.RECEPCION,
+                    "Se modificado la recepcion "+recepcion.getId(),
+                    recepcion.getId(),
+                    recepcion.getUsuario()
+            );
+        }
+
+        return recepcion;
     }
 
     //eliminar recepcion
@@ -115,6 +161,13 @@ public class RecepcionService {
         Recepcion recepcion = recepcionRepository.findById(idRecepcion)
                 .orElseThrow(() -> new IllegalArgumentException("El recepcion no existe"));
         recepcionRepository.delete(recepcion);
+        auditoriaService.registrarAuditoria(
+                TipoAccion.ELIMINAR,
+                EntidadAuditoria.RECEPCION,
+                "Se ha eliminado una recepcion.",
+                recepcion.getId(),
+                recepcion.getUsuario()
+        );
     }
 
     //buscar el detalle de las recepciones por identificador
