@@ -88,11 +88,21 @@ public class PedidoService {
     }
 
     //actualizar pedido
+    @Transactional
     public Pedido actualizarPedido(Long idPedido, ActualizarPedidoDto actualizarPedidoDto){
         Pedido pedido = pedidoRepository.findById(idPedido)
                 .orElseThrow(() -> new IllegalArgumentException("El pedido no existe"));
-        if (actualizarPedidoDto.getObservaciones() != null && !actualizarPedidoDto.getObservaciones().isBlank()) {
-            pedido.setObservaciones(actualizarPedidoDto.getObservaciones());
+
+        boolean detectarCambio = false;
+        boolean cambioEstado = false;
+
+        if (actualizarPedidoDto.getObservaciones() != null) {
+            String observacionesNuevas =  actualizarPedidoDto.getObservaciones().trim();
+            String observacionActual = pedido.getObservaciones().trim();
+            if (!observacionesNuevas.equalsIgnoreCase(observacionActual)) {
+                pedido.setObservaciones(observacionesNuevas);
+                detectarCambio = true;
+            }
         }
 
         //refactorizacion
@@ -109,8 +119,30 @@ public class PedidoService {
                 }
             }
             pedido.setEstadoPedido(estadoNuevo);
+            cambioEstado = true;
         }
-        return pedidoRepository.save(pedido);
+        if (detectarCambio || cambioEstado) {
+            pedido =  pedidoRepository.save(pedido);
+        }
+        if (cambioEstado) {
+            auditoriaService.registrarAuditoria(
+                    TipoAccion.ACTUALIZAR,
+                    EntidadAuditoria.PEDIDO,
+                    "Se ha actualizado un pedido de estado "+estadoActual+ " a "+estadoNuevo,
+                    pedido.getId(),
+                    pedido.getUsuario()
+            );
+        }
+        if (detectarCambio) {
+            auditoriaService.registrarAuditoria(
+                    TipoAccion.ACTUALIZAR,
+                    EntidadAuditoria.PEDIDO,
+                    "Se ha actualizado un pedido",
+                    pedido.getId(),
+                    pedido.getUsuario()
+            );
+        }
+        return pedido;
     }
 
     //eliminar pedido
