@@ -10,10 +10,12 @@ import org.jcdev.stockflow.backend.repository.CategoriaRepository;
 import org.jcdev.stockflow.backend.repository.EmpresaRepository;
 import org.jcdev.stockflow.backend.repository.ProductoRepository;
 import org.jcdev.stockflow.backend.repository.UbicacionRepository;
+import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Service
@@ -115,6 +117,7 @@ public class ProductoService {
     }
 
     //actualizar un producto
+    @Transactional
     public Producto actualizarProducto(Long idProducto, ActualizarProductoDto actualizarProductoDto){
         Producto producto = productoRepository.findById(idProducto)
                 .orElseThrow(() -> new IllegalArgumentException("No existe el producto con el id: " + idProducto));
@@ -124,11 +127,23 @@ public class ProductoService {
         LocalDate fechaCaducidadFinal = actualizarProductoDto.getFechaCaducidad() != null
                 ? actualizarProductoDto.getFechaCaducidad() : producto.getFechaCaducidad();
 
+        boolean detectarCambio = false;
+
         if (actualizarProductoDto.getNombre() != null){
-            producto.setNombre(actualizarProductoDto.getNombre());
+            String nombreNuevo = actualizarProductoDto.getNombre().trim();
+            String nombreActual = producto.getNombre().trim();
+            if (!nombreNuevo.equalsIgnoreCase(nombreActual)){
+                producto.setNombre(nombreNuevo);
+                detectarCambio = true;
+            }
         }
         if (actualizarProductoDto.getDescripcion() != null){
-            producto.setDescripcion(actualizarProductoDto.getDescripcion());
+            String descripcionNueva =  actualizarProductoDto.getDescripcion().trim();
+            String descripcionActual = producto.getDescripcion().trim();
+            if (!descripcionNueva.equalsIgnoreCase(descripcionActual)){
+                producto.setDescripcion(descripcionNueva);
+                detectarCambio = true;
+            }
         }
         if (fechaProduccionFinal != null && fechaCaducidadFinal != null && fechaCaducidadFinal.isBefore(fechaProduccionFinal)){
             throw new IllegalArgumentException(
@@ -136,31 +151,73 @@ public class ProductoService {
             );
         }
         if (actualizarProductoDto.getFechaProduccion() != null){
-            producto.setFechaProduccion(actualizarProductoDto.getFechaProduccion());
+            LocalDate fechaProduccionNueva = actualizarProductoDto.getFechaProduccion();
+            LocalDate fechaProduccionActual = producto.getFechaProduccion();
+            if (!fechaProduccionNueva.equals(fechaProduccionActual)){
+                producto.setFechaProduccion(fechaProduccionNueva);
+                detectarCambio = true;
+            }
         }
         if (actualizarProductoDto.getFechaCaducidad() != null){
-            producto.setFechaCaducidad(fechaCaducidadFinal);
+            LocalDate fechaCaducidadNueva = actualizarProductoDto.getFechaCaducidad();
+            LocalDate fechaCaducidadActual = producto.getFechaCaducidad();
+            if (!fechaCaducidadNueva.equals(fechaCaducidadActual)){
+                producto.setFechaCaducidad(fechaCaducidadNueva);
+                detectarCambio = true;
+            }
         }
         if (actualizarProductoDto.getIdEmpresa() != null){
             Empresa empresa = empresaRepository.findById(actualizarProductoDto.getIdEmpresa())
                     .orElseThrow(() -> new IllegalArgumentException("Empresa no encontrada"));
-            producto.setEmpresa(empresa);
+            Long nuevaEmpresa = actualizarProductoDto.getIdEmpresa();
+            Long actualEmpresa = producto.getEmpresa().getId();
+            if (nuevaEmpresa.longValue() != actualEmpresa.longValue()){
+                producto.setEmpresa(empresa);
+                detectarCambio = true;
+            }
         }
         if (actualizarProductoDto.getIdCategoria() != null){
             Categoria categoria = categoriaRepository.findById(actualizarProductoDto.getIdCategoria())
                     .orElseThrow(() -> new IllegalArgumentException("Categoria no encontrada"));
-            producto.setCategoria(categoria);
+            Long nuevaCategoria = actualizarProductoDto.getIdCategoria();
+            Long actualCategoria = producto.getCategoria().getId();
+            if (nuevaCategoria.longValue() != actualCategoria.longValue()){
+                producto.setCategoria(categoria);
+                detectarCambio = true;
+            }
         }
         if (actualizarProductoDto.getIdUbicacion() != null){
             Ubicacion ubicacion = ubicacionRepository.findById(actualizarProductoDto.getIdUbicacion())
                     .orElseThrow(() -> new IllegalArgumentException("Ubicacion no encontrada"));
-            producto.setUbicacion(ubicacion);
+            Long  nuevaUbicacion = actualizarProductoDto.getIdUbicacion();
+            Long actualUbicacion = producto.getUbicacion().getId();
+            if (nuevaUbicacion.longValue() != actualUbicacion.longValue()){
+                producto.setUbicacion(ubicacion);
+                detectarCambio = true;
+            }
         }
         if (actualizarProductoDto.getActivo() != null){
-            producto.setActivo(actualizarProductoDto.getActivo());
+            boolean activoActual = producto.isActivo();
+            boolean activoNuevo = actualizarProductoDto.getActivo();
+            if (activoActual != activoNuevo){
+                producto.setActivo(activoNuevo);
+                detectarCambio = true;
+            }
         }
 
-        producto = productoRepository.save(producto);
+        if (detectarCambio){
+            //TODO el usuario se obtendra cuando implementemos Spring Security
+            producto = productoRepository.save(producto);
+            auditoriaService.registrarAuditoria(
+                    TipoAccion.ACTUALIZAR,
+                    EntidadAuditoria.PRODUCTO,
+                    "Se ha actualizado un producto",
+                    producto.getId(),
+                    null
+            );
+        }else {
+            throw new IllegalArgumentException("No se detecto ningún cambio de producto");
+        }
         return producto;
     }
 
