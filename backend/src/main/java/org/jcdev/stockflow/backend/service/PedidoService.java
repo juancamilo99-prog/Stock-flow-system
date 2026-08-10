@@ -184,39 +184,66 @@ public class PedidoService {
     }
 
     //actualizar detalle pedido
+    @Transactional
     public DetallePedido actualizarDetallePedido(Long idDetallePedido ,ActualizarDetallePedidoDto actualizarDetallePedidoDto){
         DetallePedido detallePedido = detallePedidoRepository.findById(idDetallePedido)
                 .orElseThrow(() -> new IllegalArgumentException("El detalle de pedido no existe"));
 
-        if (actualizarDetallePedidoDto.getCantidadSolicitada() != null){
-            if (actualizarDetallePedidoDto.getCantidadSolicitada() <= 0){
-                throw new IllegalArgumentException("La cantidad debe ser mayor que 0");
-            }
-        }
-
+        boolean cambioCantidad = false;
         Pedido pedido = detallePedido.getPedido();
+
         if (pedido.getEstadoPedido() == EstadoPedido.RECIBIDO || pedido.getEstadoPedido() == EstadoPedido.CANCELADO){
             throw new IllegalArgumentException(
                     "No se puede modificar un detalle de un pedido recibido o cancelado"
             );
         }
-        detallePedido.setCantidadSolicitada(actualizarDetallePedidoDto.getCantidadSolicitada());
 
-        return detallePedidoRepository.save(detallePedido);
+        Integer cantidadNueva = actualizarDetallePedidoDto.getCantidadSolicitada();
+        Integer cantidadActual = detallePedido.getCantidadSolicitada();
+        if (cantidadNueva != null && !cantidadNueva.equals(cantidadActual)){
+            if (cantidadNueva <= 0){
+                throw new IllegalArgumentException("La cantidad debe ser mayor que 0");
+            }
+            detallePedido.setCantidadSolicitada(cantidadNueva);
+            cambioCantidad = true;
+        }
+
+        if (cambioCantidad){
+            detallePedido = detallePedidoRepository.save(detallePedido);
+            auditoriaService.registrarAuditoria(
+                    TipoAccion.ACTUALIZAR,
+                    EntidadAuditoria.PEDIDO,
+                    "Se ha actualizado la cantidad del pedido "+detallePedido.getPedido().getId(),
+                    pedido.getId(),
+                    pedido.getUsuario()
+            );
+        }else {
+            throw new IllegalArgumentException("No se detecto ningun cambio");
+        }
+
+        return detallePedido;
     }
 
+    @Transactional
     public DetallePedido eliminarDetallePedido(Long idDetallePedido){
         DetallePedido detallePedido = detallePedidoRepository.findById(idDetallePedido)
                 .orElseThrow(
                         () -> new IllegalArgumentException("El detalle del pedido no existe")
                 );
         Pedido pedido = detallePedido.getPedido();
-        if (pedido.getEstadoPedido() == EstadoPedido.CANCELADO || pedido.getEstadoPedido() == EstadoPedido.RECIBIDO){
+        if (pedido.getEstadoPedido() == EstadoPedido.CANCELADO || pedido.getEstadoPedido() == EstadoPedido.RECIBIDO || pedido.getEstadoPedido() == EstadoPedido.PARCIAL){
             throw new IllegalArgumentException(
-                    "No se puede eliminar un detalle de un pedido cancelado o recibido"
+                    "No se puede eliminar un detalle de un pedido cancelado, recibido o parcial"
             );
         }
         detallePedidoRepository.delete(detallePedido);
+        auditoriaService.registrarAuditoria(
+                TipoAccion.ELIMINAR,
+                EntidadAuditoria.PEDIDO,
+                "Se ha eliminado el detalle de un pedido pedido "+detallePedido.getPedido().getId(),
+                pedido.getId(),
+                pedido.getUsuario()
+        );
         return detallePedido;
     }
 }
