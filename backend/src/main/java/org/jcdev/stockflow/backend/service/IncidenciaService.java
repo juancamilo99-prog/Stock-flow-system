@@ -1,8 +1,11 @@
 package org.jcdev.stockflow.backend.service;
 
+import jakarta.transaction.Transactional;
 import org.jcdev.stockflow.backend.dto.actualizardto.ActualizarIncidenciaDto;
 import org.jcdev.stockflow.backend.dto.creardto.CrearIncidenciaDto;
 import org.jcdev.stockflow.backend.entity.*;
+import org.jcdev.stockflow.backend.enums.auditoria.EntidadAuditoria;
+import org.jcdev.stockflow.backend.enums.auditoria.TipoAccion;
 import org.jcdev.stockflow.backend.enums.incidencia.EstadoIncidencia;
 import org.jcdev.stockflow.backend.repository.*;
 import org.springframework.stereotype.Service;
@@ -17,11 +20,16 @@ public class IncidenciaService {
     private final ProductoRepository productoRepository;
     private final RecepcionRepository recepcionRepository;
 
-    public IncidenciaService(IncidenciaRepository incidenciaRepository, UsuarioRepository usuarioRepository, ProductoRepository productoRepository, RecepcionRepository recepcionRepository) {
+    //servicios
+    AuditoriaService auditoriaService;
+
+    public IncidenciaService(IncidenciaRepository incidenciaRepository, UsuarioRepository usuarioRepository, ProductoRepository productoRepository,
+                             RecepcionRepository recepcionRepository, AuditoriaService auditoriaService) {
         this.incidenciaRepository = incidenciaRepository;
         this.usuarioRepository = usuarioRepository;
         this.productoRepository = productoRepository;
         this.recepcionRepository = recepcionRepository;
+        this.auditoriaService = auditoriaService;
     }
 
     //obtener todas las incidencias
@@ -55,6 +63,7 @@ public class IncidenciaService {
     }
 
     // crear una incidencia
+    @Transactional
     public Incidencia crearIncidencia(CrearIncidenciaDto crearIncidenciaDto) {
         //buscar un usuario
         Usuario usuario =  usuarioRepository.findById(crearIncidenciaDto.getIdUsuario())
@@ -87,20 +96,33 @@ public class IncidenciaService {
                 crearIncidenciaDto.getDescripcion(),
                 usuario, producto, recepcion != null ? recepcion.getPedido() : null ,recepcion
         );
-        return incidenciaRepository.save(incidencia);
+        incidencia = incidenciaRepository.save(incidencia);
+        auditoriaService.registrarAuditoria(
+                TipoAccion.CREAR,
+                EntidadAuditoria.INCIDENCIA,
+                "Se ha creado una incidencia nueva de: "+crearIncidenciaDto.getTipoIncidencia(),
+                incidencia.getId(),
+                incidencia.getUsuario()
+        );
+        return incidencia;
     }
 
     //actualizar una incidencia
+    @Transactional
     public Incidencia actualizarIncidencia(Long idIncidencia,ActualizarIncidenciaDto actualizarIncidenciaDto) {
         //buscamos la incidencia
         Incidencia incidencia = incidenciaRepository.findById(idIncidencia)
                 .orElseThrow(() -> new IllegalArgumentException("Incidencia no encontrada"));
 
-        if (actualizarIncidenciaDto.getDescripcion() != null) {
-            if (actualizarIncidenciaDto.getDescripcion().isBlank()){
-                throw new IllegalArgumentException("La Descripción no puede estar vacia");
+        boolean detectarCambio = false;
+        boolean cambioEstado = false;
+        if (actualizarIncidenciaDto.getDescripcion()!= null && !actualizarIncidenciaDto.getDescripcion().isBlank()) {
+            String descripcionNueva = actualizarIncidenciaDto.getDescripcion().trim();
+            String descripcionActual = incidencia.getDescripcion().trim();
+            if (!descripcionNueva.equalsIgnoreCase(descripcionActual)) {
+                incidencia.setDescripcion(descripcionNueva);
+                detectarCambio = true;
             }
-            incidencia.setDescripcion(actualizarIncidenciaDto.getDescripcion());
         }
 
         EstadoIncidencia estadoActual = incidencia.getEstadoIncidencia();
@@ -118,9 +140,34 @@ public class IncidenciaService {
                 }
             }
             incidencia.setEstadoIncidencia(estadoNuevo);
+            cambioEstado = true;
         }
 
-        return incidenciaRepository.save(incidencia);
+        if (detectarCambio || cambioEstado) {
+            incidencia =  incidenciaRepository.save(incidencia);
+        } else {
+            throw new IllegalArgumentException("No se detecto ningun cambio");
+        }
+
+        if (cambioEstado) {
+            auditoriaService.registrarAuditoria(
+                    TipoAccion.ACTUALIZAR,
+                    EntidadAuditoria.INCIDENCIA,
+                    "Se ha actualizado el estado de la incidencia "+incidencia.getId()+" a "+estadoNuevo,
+                    incidencia.getId(),
+                    incidencia.getUsuario()
+            );
+        }
+        if (detectarCambio) {
+            auditoriaService.registrarAuditoria(
+                    TipoAccion.ACTUALIZAR,
+                    EntidadAuditoria.INCIDENCIA,
+                    "Se ha actualizado una incidencia",
+                    incidencia.getId(),
+                    incidencia.getUsuario()
+            );
+        }
+        return incidencia;
     }
 }
 
