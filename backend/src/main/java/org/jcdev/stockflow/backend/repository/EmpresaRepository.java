@@ -9,8 +9,8 @@ import java.util.List;
 @Repository
 public interface EmpresaRepository extends JpaRepository<Empresa, Long> {
 
-    boolean existsByNombre(String nombre);
-    boolean existsByEmail(String email);
+    boolean existsByNombreIgnoreCase(String nombre);
+    boolean existsByEmailIgnoreCase(String email);
 
     boolean existsByEmailAndIdNot(String email,Long idEmpresa);
     boolean existsByNombreAndIdNot(String nombre,Long idEmpresa);

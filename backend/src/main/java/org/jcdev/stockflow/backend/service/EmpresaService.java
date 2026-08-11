@@ -1,9 +1,12 @@
 package org.jcdev.stockflow.backend.service;
 
+import jakarta.transaction.Transactional;
 import org.jcdev.stockflow.backend.dto.actualizardto.ActualizarEmpresaDto;
 import org.jcdev.stockflow.backend.dto.creardto.CrearEmpresaDto;
 import org.jcdev.stockflow.backend.entity.Empresa;
 import org.jcdev.stockflow.backend.entity.Producto;
+import org.jcdev.stockflow.backend.enums.auditoria.EntidadAuditoria;
+import org.jcdev.stockflow.backend.enums.auditoria.TipoAccion;
 import org.jcdev.stockflow.backend.repository.EmpresaRepository;
 import org.jcdev.stockflow.backend.repository.ProductoRepository;
 import org.springframework.stereotype.Service;
@@ -16,9 +19,13 @@ public class EmpresaService {
     private final EmpresaRepository empresaRepository;
     private final ProductoRepository productoRepository;
 
-    public EmpresaService(EmpresaRepository empresaRepository, ProductoRepository productoRepository) {
+    //servicios
+    private final AuditoriaService auditoriaService;
+
+    public EmpresaService(EmpresaRepository empresaRepository, ProductoRepository productoRepository, AuditoriaService auditoriaService) {
         this.empresaRepository = empresaRepository;
         this.productoRepository = productoRepository;
+        this.auditoriaService = auditoriaService;
     }
 
     //obtener todas las empresas
@@ -36,22 +43,35 @@ public class EmpresaService {
     }
 
     //crear una empresa
+    @Transactional
     public Empresa crearEmpresa(CrearEmpresaDto crearEmpresaDto){
-
-        if (empresaRepository.existsByNombre(crearEmpresaDto.getNombre())){
+        String nombre = crearEmpresaDto.getNombre().trim();
+        String email = crearEmpresaDto.getEmail().trim().toLowerCase();
+        String direccion = crearEmpresaDto.getDireccion().trim();
+        String telefono = crearEmpresaDto.getTelefono().trim();
+        if (empresaRepository.existsByNombreIgnoreCase(nombre)){
             throw new IllegalArgumentException("Ya existe una empresa con ese nombre!");
         }
-        if (empresaRepository.existsByEmail(crearEmpresaDto.getEmail())){
+        if (empresaRepository.existsByEmailIgnoreCase(email)){
             throw new IllegalArgumentException("Ya existe una empresa con ese email!");
         }
         Empresa empresa = new Empresa();
-        empresa.setNombre(crearEmpresaDto.getNombre());
-        empresa.setEmail(crearEmpresaDto.getEmail());
-        empresa.setTelefono(crearEmpresaDto.getTelefono());
-        empresa.setDireccion(crearEmpresaDto.getDireccion());
+        empresa.setNombre(nombre);
+        empresa.setEmail(email);
+        empresa.setTelefono(telefono);
+        empresa.setDireccion(direccion);
         empresa.setTipoEmpresa(crearEmpresaDto.getTipoEmpresa());
 
-        return empresaRepository.save(empresa);
+        empresa = empresaRepository.save(empresa);
+
+        auditoriaService.registrarAuditoria(
+                TipoAccion.CREAR,
+                EntidadAuditoria.EMPRESA,
+                "Se ha creado una empresa nueva: "+empresa.getNombre(),
+                empresa.getId(),
+                null
+        );
+        return empresa;
     }
 
     //actualizar una empresa
