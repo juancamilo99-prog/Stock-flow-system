@@ -1,8 +1,11 @@
 package org.jcdev.stockflow.backend.service;
 
+import jakarta.transaction.Transactional;
 import org.jcdev.stockflow.backend.dto.creardto.CrearCategoriaDto;
 import org.jcdev.stockflow.backend.entity.Categoria;
 import org.jcdev.stockflow.backend.entity.Producto;
+import org.jcdev.stockflow.backend.enums.auditoria.EntidadAuditoria;
+import org.jcdev.stockflow.backend.enums.auditoria.TipoAccion;
 import org.jcdev.stockflow.backend.repository.CategoriaRepository;
 import org.jcdev.stockflow.backend.repository.ProductoRepository;
 import org.springframework.data.crossstore.ChangeSetPersister;
@@ -16,10 +19,14 @@ public class CategoriaService {
     private final ProductoRepository productoRepository;
     private final CategoriaRepository categoriaRepository;
 
+    //servicios
+    private final AuditoriaService auditoriaService;
 
-    public CategoriaService(ProductoRepository productoRepository, CategoriaRepository categoriaRepository) {
+
+    public CategoriaService(ProductoRepository productoRepository, CategoriaRepository categoriaRepository, AuditoriaService auditoriaService) {
         this.productoRepository = productoRepository;
         this.categoriaRepository = categoriaRepository;
+        this.auditoriaService = auditoriaService;
     }
 
     //obtener todas las categorias
@@ -36,13 +43,22 @@ public class CategoriaService {
     }
 
     //crear una categoria
+    @Transactional
     public Categoria crearCategoria(CrearCategoriaDto crearCategoriaDto) {
         String nombre = crearCategoriaDto.getNombre().trim();
         if (categoriaRepository.existsByNombreIgnoreCase(nombre)) {
             throw new IllegalArgumentException("La categoria ya existe: "+crearCategoriaDto.getNombre());
         }
         Categoria categoria = new Categoria(nombre);
-        return categoriaRepository.save(categoria);
+        categoria = categoriaRepository.save(categoria);
+        auditoriaService.registrarAuditoria(
+                TipoAccion.CREAR,
+                EntidadAuditoria.CATEGORIA,
+                "Se ha creado una categoria nueva: "+categoria.getNombre(),
+                categoria.getId(),
+                null
+        );
+        return categoria;
     }
 
     //actualizar una categoria
