@@ -7,6 +7,7 @@ import org.jcdev.stockflow.backend.entity.Empresa;
 import org.jcdev.stockflow.backend.entity.Producto;
 import org.jcdev.stockflow.backend.enums.auditoria.EntidadAuditoria;
 import org.jcdev.stockflow.backend.enums.auditoria.TipoAccion;
+import org.jcdev.stockflow.backend.enums.empresa.TipoEmpresa;
 import org.jcdev.stockflow.backend.repository.EmpresaRepository;
 import org.jcdev.stockflow.backend.repository.ProductoRepository;
 import org.springframework.stereotype.Service;
@@ -75,6 +76,7 @@ public class EmpresaService {
     }
 
     //actualizar una empresa
+    @Transactional
     public Empresa actualizarEmpresa(Long idEmpresa, ActualizarEmpresaDto actualizarEmpresaDto){
 
         Empresa empresa = empresaRepository.findById(idEmpresa)
@@ -82,35 +84,87 @@ public class EmpresaService {
                         () -> new IllegalArgumentException("La empresa no existe: "+idEmpresa)
                 );
 
-        if (actualizarEmpresaDto.getEmail() != null && empresaRepository.existsByEmailAndIdNot(actualizarEmpresaDto.getEmail(),idEmpresa)){
-            throw new IllegalArgumentException("Ya existe una empresa con ese email!");
-        }
-
-        if (actualizarEmpresaDto.getNombre() != null && empresaRepository.existsByNombreAndIdNot(actualizarEmpresaDto.getNombre(),idEmpresa)){
-            throw new IllegalArgumentException("Ya existe una empresa con ese nombre!");
-        }
-
+        boolean detectarCambio = false;
         if (actualizarEmpresaDto.getNombre() != null){
-            empresa.setNombre(actualizarEmpresaDto.getNombre());
+            String nombreNuevo = actualizarEmpresaDto.getNombre().trim();
+            String nombreActual = empresa.getNombre().trim();
+            if (nombreNuevo.isBlank()){
+                throw new IllegalArgumentException("El nombre no puede estar vacio");
+            }
+            if (!nombreNuevo.equalsIgnoreCase(nombreActual)){
+                if (empresaRepository.existsByNombreIgnoreCaseAndIdNot(nombreNuevo,idEmpresa)){
+                    throw new IllegalArgumentException("Ya existe una empresa con ese nombre!");
+                }
+                empresa.setNombre(nombreNuevo);
+                detectarCambio = true;
+            }
         }
         if (actualizarEmpresaDto.getEmail() != null){
-            empresa.setEmail(actualizarEmpresaDto.getEmail());
+            String emailNuevo = actualizarEmpresaDto.getEmail().trim().toLowerCase();
+            String emailActual = empresa.getEmail().trim().toLowerCase();
+            if (emailNuevo.isBlank()){
+                throw new IllegalArgumentException("El email no puede estar vacio");
+            }
+            if (!emailNuevo.equalsIgnoreCase(emailActual)){
+                if (empresaRepository.existsByEmailIgnoreCaseAndIdNot(emailNuevo,idEmpresa)){
+                    throw new IllegalArgumentException("Ya existe una empresa con ese email!");
+                }
+                empresa.setEmail(emailNuevo);
+                detectarCambio = true;
+            }
         }
         if (actualizarEmpresaDto.getTelefono() != null){
-            empresa.setTelefono(actualizarEmpresaDto.getTelefono());
+            String telefonoNuevo = actualizarEmpresaDto.getTelefono().trim();
+            String telefonoActual = empresa.getTelefono().trim();
+            if (telefonoNuevo.isBlank()){
+                throw new IllegalArgumentException("El telefono no puede estar vacio");
+            }
+            if (!telefonoNuevo.equals(telefonoActual)){
+                empresa.setTelefono(telefonoNuevo);
+                detectarCambio = true;
+            }
         }
         if (actualizarEmpresaDto.getDireccion() != null){
-            empresa.setDireccion(actualizarEmpresaDto.getDireccion());
+            String direccionNueva = actualizarEmpresaDto.getDireccion().trim();
+            String direccionActual = empresa.getDireccion().trim();
+            if (direccionNueva.isBlank()){
+                throw new IllegalArgumentException("La direccion no puede estar vacia");
+            }
+            if (!direccionNueva.equals(direccionActual)){
+                empresa.setDireccion(direccionNueva);
+                detectarCambio = true;
+            }
         }
         if (actualizarEmpresaDto.getTipoEmpresa() != null){
-            empresa.setTipoEmpresa(actualizarEmpresaDto.getTipoEmpresa());
+            TipoEmpresa tipoEmpresaActual = empresa.getTipoEmpresa();
+            TipoEmpresa tipoEmpresaNuevo = actualizarEmpresaDto.getTipoEmpresa();
+            if (tipoEmpresaNuevo != tipoEmpresaActual){
+                empresa.setTipoEmpresa(tipoEmpresaNuevo);
+                detectarCambio = true;
+            }
         }
         if (actualizarEmpresaDto.getActivo() != null){
-            empresa.setActivo(actualizarEmpresaDto.getActivo());
+            boolean activoNuevo = actualizarEmpresaDto.getActivo();
+            boolean activoActual = empresa.getActivo();
+            if (activoNuevo != activoActual){
+                empresa.setActivo(activoNuevo);
+                detectarCambio = true;
+            }
         }
 
-        return empresaRepository.save(empresa);
-
+        if (detectarCambio){
+            empresa = empresaRepository.save(empresa);
+            auditoriaService.registrarAuditoria(
+                    TipoAccion.ACTUALIZAR,
+                    EntidadAuditoria.EMPRESA,
+                    "Se ha actualizado una empresa",
+                    empresa.getId(),
+                    null
+            );
+        }else {
+            throw new IllegalArgumentException("No se detecto ningun cambio");
+        }
+        return empresa;
     }
 
     public Empresa eliminarEmpresa(Long idEmpresa){
