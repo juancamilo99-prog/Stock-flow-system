@@ -47,9 +47,7 @@ public class UbicacionService {
         if (ubicacionRepository.existsByCodigoIgnoreCase(codigo)) {
             throw new IllegalArgumentException("La ubicacion ya existe: "+codigo);
         }
-        Ubicacion ubicacion = new Ubicacion();
-        ubicacion.setCodigo(codigo);
-        ubicacion.setDescripcion(descripcion);
+        Ubicacion ubicacion = new Ubicacion(codigo, descripcion);
         ubicacion = ubicacionRepository.save(ubicacion);
 
         //TODO el usuario se obtendra del SecurityContext
