@@ -1,6 +1,7 @@
 package org.jcdev.stockflow.backend.service;
 
 import jakarta.transaction.Transactional;
+import org.jcdev.stockflow.backend.config.SecurityConfig;
 import org.jcdev.stockflow.backend.dto.actualizardto.ActualizarUsuarioDto;
 import org.jcdev.stockflow.backend.dto.creardto.CrearUsuarioDto;
 import org.jcdev.stockflow.backend.entity.Auditoria;
@@ -10,6 +11,8 @@ import org.jcdev.stockflow.backend.enums.auditoria.TipoAccion;
 import org.jcdev.stockflow.backend.enums.usuario.Rol;
 import org.jcdev.stockflow.backend.repository.AuditoriaRepository;
 import org.jcdev.stockflow.backend.repository.UsuarioRepository;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,9 +23,13 @@ public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final AuditoriaService auditoriaService;
 
-    public UsuarioService(UsuarioRepository usuarioRepository, AuditoriaService auditoriaService) {
+    //configuracion security
+    private final PasswordEncoder passwordEncoder;
+
+    public UsuarioService(UsuarioRepository usuarioRepository, AuditoriaService auditoriaService, PasswordEncoder passwordEncoder) {
         this.usuarioRepository = usuarioRepository;
         this.auditoriaService = auditoriaService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     //obtener todos los usuarios
@@ -55,12 +62,15 @@ public class UsuarioService {
             throw new IllegalArgumentException("Ya existe un usuario con ese email");
         }
 
+        //usamos el metodo inyectado por spring y guardamos un hash
+        String passwordHash = passwordEncoder.encode(crearUsuarioDto.getPassword());
+
         Usuario usuario = new Usuario();
 
         usuario.setNombre(crearUsuarioDto.getNombre());
         usuario.setEmail(crearUsuarioDto.getEmail());
         usuario.setTelefono(crearUsuarioDto.getTelefono());
-        usuario.setPassword(crearUsuarioDto.getPassword());
+        usuario.setPassword(passwordHash);
         usuario.setRol(Rol.OPERARIO);
         usuario.setActivo(true);
         usuario =  usuarioRepository.save(usuario);
