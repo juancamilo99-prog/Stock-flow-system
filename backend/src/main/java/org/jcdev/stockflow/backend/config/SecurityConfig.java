@@ -9,6 +9,7 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -55,7 +56,11 @@ public class SecurityConfig {
                                 .anyRequest().authenticated())
                 .csrf(AbstractHttpConfigurer::disable)
                 //antes de ejecutar el filtro estandar de autenticacion, ejecuta mi filtro JWT
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                //configuramos la persistencia de la autenticacion sin estado, spring security no creara ni utilizara sesiones
+                .sessionManagement((session) -> session.sessionCreationPolicy(
+                        SessionCreationPolicy.STATELESS)
+                );
         return http.build();
     }
 }
