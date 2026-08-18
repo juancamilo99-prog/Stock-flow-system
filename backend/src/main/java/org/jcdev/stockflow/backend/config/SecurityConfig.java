@@ -52,7 +52,7 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests.requestMatchers("/auth/login").permitAll()
-                                .requestMatchers(HttpMethod.POST,"/usuarios").permitAll()
+                                .requestMatchers(HttpMethod.POST,"/usuarios").hasRole("COORDINADOR")
                                 .anyRequest().authenticated())
                 .csrf(AbstractHttpConfigurer::disable)
                 //antes de ejecutar el filtro estandar de autenticacion, ejecuta mi filtro JWT
