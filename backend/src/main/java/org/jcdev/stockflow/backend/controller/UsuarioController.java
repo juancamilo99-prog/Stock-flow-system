@@ -5,6 +5,8 @@ import org.jcdev.stockflow.backend.dto.actualizardto.ActualizarUsuarioDto;
 import org.jcdev.stockflow.backend.dto.creardto.CrearUsuarioDto;
 import org.jcdev.stockflow.backend.entity.Usuario;
 import org.jcdev.stockflow.backend.service.UsuarioService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,37 +22,46 @@ public class UsuarioController {
     }
 
     @GetMapping
-    public List<Usuario> obtenerTodosUsuarios(){
-        return usuarioService.obtenerTodosUsuarios();
+    public ResponseEntity<List<Usuario>> obtenerTodosUsuarios(){
+        List<Usuario> usuario = usuarioService.obtenerTodosUsuarios();
+        return ResponseEntity.ok(usuario);
     }
 
     @GetMapping(path = "/{idUsuario}")
-    public Usuario obtenerUsuarioPorId(@PathVariable Long idUsuario){
-        return usuarioService.obtenerUsuarioPorId(idUsuario);
+    public ResponseEntity<Usuario> obtenerUsuarioPorId(@PathVariable Long idUsuario){
+        Usuario usuario = usuarioService.obtenerUsuarioPorId(idUsuario);
+        return ResponseEntity.ok(usuario);
     }
 
     @GetMapping(path = "/desactivos")
-    public List<Usuario> obtenerUsuariosDesactivados(){
-        return usuarioService.obtenerUsuariosDesactivados();
+    public ResponseEntity<List<Usuario>> obtenerUsuariosDesactivados(){
+        List<Usuario> usuarios = usuarioService.obtenerUsuariosDesactivados();
+        return ResponseEntity.ok(usuarios);
+
     }
 
     @GetMapping(path = "/activos")
-    public List<Usuario> obtenerUsuariosActivos(){
-        return usuarioService.obtenerUsuariosActivos();
+    public ResponseEntity<List<Usuario>> obtenerUsuariosActivos(){
+        List<Usuario> usuarios = usuarioService.obtenerUsuariosActivos();
+        return ResponseEntity.ok(usuarios);
     }
 
     @PostMapping
-    public Usuario crearUsuario(@Valid @RequestBody CrearUsuarioDto crearUsuarioDto){
-        return usuarioService.crearUsuario(crearUsuarioDto);
+    public ResponseEntity<Usuario> crearUsuario(@Valid @RequestBody CrearUsuarioDto crearUsuarioDto){
+        Usuario usuario = usuarioService.crearUsuario(crearUsuarioDto);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(usuario);
     }
 
     @PatchMapping(path = "/{idUsuario}")
-    public Usuario actualizarUsuaio(@PathVariable Long idUsuario, @Valid @RequestBody ActualizarUsuarioDto actualizarUsuarioDto){
-        return usuarioService.actualizarUsuario(idUsuario,actualizarUsuarioDto);
+    public ResponseEntity<Usuario> actualizarUsuaio(@PathVariable Long idUsuario, @Valid @RequestBody ActualizarUsuarioDto actualizarUsuarioDto){
+        Usuario usuario = usuarioService.actualizarUsuario(idUsuario,actualizarUsuarioDto);
+        return ResponseEntity.ok(usuario);
     }
 
     @DeleteMapping(path = "/{idUsuario}")
-    public Usuario eliminarUsuario(@PathVariable Long idUsuario){
-        return usuarioService.eliminarUsuario(idUsuario);
+    public ResponseEntity<Usuario> eliminarUsuario(@PathVariable Long idUsuario){
+        Usuario usuario = usuarioService.eliminarUsuario(idUsuario);
+        return ResponseEntity.ok(usuario);
     }
 }
