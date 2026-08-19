@@ -10,6 +10,7 @@ import org.jcdev.stockflow.backend.enums.usuario.Rol;
 @AllArgsConstructor
 public class UsuarioResponsesDto {
 
+    private Long id;
     private String nombre;
     private String email;
     private String telefono;

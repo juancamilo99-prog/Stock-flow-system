@@ -3,6 +3,7 @@ package org.jcdev.stockflow.backend.controller;
 import jakarta.validation.Valid;
 import org.jcdev.stockflow.backend.dto.actualizardto.ActualizarUsuarioDto;
 import org.jcdev.stockflow.backend.dto.creardto.CrearUsuarioDto;
+import org.jcdev.stockflow.backend.dto.responses.UsuarioResponsesDto;
 import org.jcdev.stockflow.backend.entity.Usuario;
 import org.jcdev.stockflow.backend.service.UsuarioService;
 import org.springframework.http.HttpStatus;
@@ -24,8 +25,8 @@ public class UsuarioController {
 
     @PreAuthorize("hasRole('COORDINADOR') OR hasRole('ENCARGADO')")
     @GetMapping
-    public ResponseEntity<List<Usuario>> obtenerTodosUsuarios(){
-        List<Usuario> usuario = usuarioService.obtenerTodosUsuarios();
+    public ResponseEntity<List<UsuarioResponsesDto>> obtenerTodosUsuarios(){
+        List<UsuarioResponsesDto> usuario = usuarioService.obtenerTodosUsuarios();
         return ResponseEntity.ok(usuario);
     }
 

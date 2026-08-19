@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import org.jcdev.stockflow.backend.config.SecurityConfig;
 import org.jcdev.stockflow.backend.dto.actualizardto.ActualizarUsuarioDto;
 import org.jcdev.stockflow.backend.dto.creardto.CrearUsuarioDto;
+import org.jcdev.stockflow.backend.dto.responses.UsuarioResponsesDto;
 import org.jcdev.stockflow.backend.entity.Auditoria;
 import org.jcdev.stockflow.backend.entity.Usuario;
 import org.jcdev.stockflow.backend.enums.auditoria.EntidadAuditoria;
@@ -15,6 +16,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -33,8 +35,21 @@ public class UsuarioService {
     }
 
     //obtener todos los usuarios
-    public List<Usuario> obtenerTodosUsuarios(){
-        return usuarioRepository.findAll();
+    public List<UsuarioResponsesDto> obtenerTodosUsuarios(){
+        List<UsuarioResponsesDto> listaUsuarios = new ArrayList<>();
+        List<Usuario> usuarios = usuarioRepository.findAll();
+        for (Usuario usuario : usuarios) {
+            UsuarioResponsesDto respuestaUsuarios = new UsuarioResponsesDto(
+                    usuario.getId(),
+                    usuario.getNombre(),
+                    usuario.getEmail(),
+                    usuario.getTelefono(),
+                    usuario.getRol(),
+                    usuario.isActivo()
+            );
+            listaUsuarios.add(respuestaUsuarios);
+        }
+        return listaUsuarios;
     }
 
     //obtener usuario por identificador
