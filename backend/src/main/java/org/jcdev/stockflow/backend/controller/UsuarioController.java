@@ -34,21 +34,24 @@ public class UsuarioController {
             "OR @authorizationService.esUsuarioActual(#idUsuario) " +
             "OR (hasRole('ENCARGADO') AND @authorizationService.esOperario(#idUsuario))")
     @GetMapping(path = "/{idUsuario}")
-    public ResponseEntity<Usuario> obtenerUsuarioPorId(@PathVariable Long idUsuario){
-        Usuario usuario = usuarioService.obtenerUsuarioPorId(idUsuario);
+    public ResponseEntity<UsuarioResponsesDto> obtenerUsuarioPorId(@PathVariable Long idUsuario){
+        UsuarioResponsesDto usuario = usuarioService.obtenerUsuarioPorId(idUsuario);
         return ResponseEntity.ok(usuario);
     }
 
+    //controller para obtener usuarios desactivados
+    @PreAuthorize("hasRole('COORDINADOR') OR hasRole('ENCARGADO')")
     @GetMapping(path = "/desactivos")
-    public ResponseEntity<List<Usuario>> obtenerUsuariosDesactivados(){
-        List<Usuario> usuarios = usuarioService.obtenerUsuariosDesactivados();
+    public ResponseEntity<List<UsuarioResponsesDto>> obtenerUsuariosDesactivados(){
+        List<UsuarioResponsesDto> usuarios = usuarioService.obtenerUsuariosDesactivados();
         return ResponseEntity.ok(usuarios);
-
     }
 
+    //controller para obtener usuarios activos
+    @PreAuthorize("hasRole('COORDINADOR') OR hasRole('ENCARGADO')")
     @GetMapping(path = "/activos")
-    public ResponseEntity<List<Usuario>> obtenerUsuariosActivos(){
-        List<Usuario> usuarios = usuarioService.obtenerUsuariosActivos();
+    public ResponseEntity<List<UsuarioResponsesDto>> obtenerUsuariosActivos(){
+        List<UsuarioResponsesDto> usuarios = usuarioService.obtenerUsuariosActivos();
         return ResponseEntity.ok(usuarios);
     }
 

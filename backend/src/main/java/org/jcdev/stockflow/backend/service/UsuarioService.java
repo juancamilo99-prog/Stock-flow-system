@@ -10,6 +10,7 @@ import org.jcdev.stockflow.backend.entity.Usuario;
 import org.jcdev.stockflow.backend.enums.auditoria.EntidadAuditoria;
 import org.jcdev.stockflow.backend.enums.auditoria.TipoAccion;
 import org.jcdev.stockflow.backend.enums.usuario.Rol;
+import org.jcdev.stockflow.backend.mapper.UsuarioMapper;
 import org.jcdev.stockflow.backend.repository.AuditoriaRepository;
 import org.jcdev.stockflow.backend.repository.UsuarioRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -25,12 +26,16 @@ public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final AuditoriaService auditoriaService;
 
+    //mapper
+    private final UsuarioMapper usuarioMapper;
+
     //configuracion security
     private final PasswordEncoder passwordEncoder;
 
-    public UsuarioService(UsuarioRepository usuarioRepository, AuditoriaService auditoriaService, PasswordEncoder passwordEncoder) {
+    public UsuarioService(UsuarioRepository usuarioRepository, AuditoriaService auditoriaService, UsuarioMapper usuarioMapper, PasswordEncoder passwordEncoder) {
         this.usuarioRepository = usuarioRepository;
         this.auditoriaService = auditoriaService;
+        this.usuarioMapper = usuarioMapper;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -39,34 +44,38 @@ public class UsuarioService {
         List<UsuarioResponsesDto> listaUsuarios = new ArrayList<>();
         List<Usuario> usuarios = usuarioRepository.findAll();
         for (Usuario usuario : usuarios) {
-            UsuarioResponsesDto respuestaUsuarios = new UsuarioResponsesDto(
-                    usuario.getId(),
-                    usuario.getNombre(),
-                    usuario.getEmail(),
-                    usuario.getTelefono(),
-                    usuario.getRol(),
-                    usuario.isActivo()
-            );
-            listaUsuarios.add(respuestaUsuarios);
+            listaUsuarios.add(usuarioMapper.toResponsesDto(usuario));
         }
         return listaUsuarios;
     }
 
     //obtener usuario por identificador
-    public Usuario obtenerUsuarioPorId(Long idUsuario){
-        return usuarioRepository.findById(idUsuario).orElseThrow(
+    public UsuarioResponsesDto obtenerUsuarioPorId(Long idUsuario){
+        Usuario usuario = usuarioRepository.findById(idUsuario).orElseThrow(
                 ()-> new IllegalArgumentException("El usuario no existe")
         );
+
+        return usuarioMapper.toResponsesDto(usuario);
     }
 
     //obtener usuarios desactivados
-    public List<Usuario> obtenerUsuariosDesactivados(){
-        return usuarioRepository.findByActivoFalse(false);
+    public List<UsuarioResponsesDto> obtenerUsuariosDesactivados(){
+        List <Usuario> usuarios = usuarioRepository.findByActivoFalse(false);
+        List<UsuarioResponsesDto> listaUsuarios = new ArrayList<>();
+        for (Usuario usuario : usuarios) {
+            listaUsuarios.add(usuarioMapper.toResponsesDto(usuario));
+        }
+        return listaUsuarios;
     }
 
     //obtener usuarios activos
-    public List<Usuario> obtenerUsuariosActivos(){
-        return usuarioRepository.findByActivoTrue(true);
+    public List<UsuarioResponsesDto> obtenerUsuariosActivos(){
+        List<Usuario> usuarios = usuarioRepository.findByActivoTrue(true);
+        List<UsuarioResponsesDto> listaUsuarios = new ArrayList<>();
+        for (Usuario usuario : usuarios) {
+            listaUsuarios.add(usuarioMapper.toResponsesDto(usuario));
+        }
+        return listaUsuarios;
     }
 
     //crear un usuario
