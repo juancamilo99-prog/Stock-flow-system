@@ -22,6 +22,7 @@ public class UsuarioController {
         this.usuarioService = usuarioService;
     }
 
+    @PreAuthorize("hasRole('COORDINADOR') OR hasRole('ENCARGADO')")
     @GetMapping
     public ResponseEntity<List<Usuario>> obtenerTodosUsuarios(){
         List<Usuario> usuario = usuarioService.obtenerTodosUsuarios();
