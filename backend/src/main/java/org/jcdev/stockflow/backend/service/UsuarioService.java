@@ -116,7 +116,7 @@ public class UsuarioService {
     //actualizar un usuario
     //aqui implementaremos la regla de negocio, para activar o desactivar un usuario
     @Transactional
-    public Usuario actualizarUsuario(Long idUsuario, ActualizarUsuarioDto actualizarUsuarioDto){
+    public UsuarioResponsesDto actualizarUsuario(Long idUsuario, ActualizarUsuarioDto actualizarUsuarioDto){
         Usuario usuario = usuarioRepository.findById(idUsuario).orElseThrow(
                 () -> new IllegalArgumentException("El usuario no existe"));
 
@@ -150,8 +150,14 @@ public class UsuarioService {
             }
         }
         if (actualizarUsuarioDto.getPassword() != null){
-            //TODO implementar validacion con spring secutiry + bcrypt integrados
-            usuario.setPassword(actualizarUsuarioDto.getPassword());
+            //matches compara el password en texto plano recibido con el hash ya guardado en la bd,
+            //sin desencriptar el hash, para saber si es la misma contraseña o una distinta
+            boolean passwordNothash = passwordEncoder.matches(actualizarUsuarioDto.getPassword(), usuario.getPassword());
+            if (!passwordNothash){
+                String passwordHash = passwordEncoder.encode(actualizarUsuarioDto.getPassword());
+                usuario.setPassword(passwordHash);
+                detectarCambio = true;
+            }
         }
         if (actualizarUsuarioDto.getRol() != null){
             Rol rolActual = usuario.getRol();
@@ -183,7 +189,7 @@ public class UsuarioService {
         }else {
             throw new IllegalArgumentException("No se detecto ningun cambio");
         }
-        return usuario;
+        return usuarioMapper.toResponsesDto(usuario);
     }
 
     // eliminar un usuario

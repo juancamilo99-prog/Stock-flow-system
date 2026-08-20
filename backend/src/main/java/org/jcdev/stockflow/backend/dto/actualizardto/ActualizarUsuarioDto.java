@@ -25,9 +25,7 @@ public class ActualizarUsuarioDto {
     private String telefono;
     @Size(min = 8,max = 100, message = "La contraseña adebe tener entre 8 y 100 caracteres")
     private String password;
-    @Column(nullable = false)
     private Boolean activo;
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private Rol rol;
 }

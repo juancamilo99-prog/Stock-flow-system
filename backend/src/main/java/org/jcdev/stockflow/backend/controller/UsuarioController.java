@@ -63,9 +63,10 @@ public class UsuarioController {
                 .body(usuario);
     }
 
+    @PreAuthorize("hasRole('COORDINADOR')")
     @PatchMapping(path = "/{idUsuario}")
-    public ResponseEntity<Usuario> actualizarUsuaio(@PathVariable Long idUsuario, @Valid @RequestBody ActualizarUsuarioDto actualizarUsuarioDto){
-        Usuario usuario = usuarioService.actualizarUsuario(idUsuario,actualizarUsuarioDto);
+    public ResponseEntity<UsuarioResponsesDto> actualizarUsuario(@PathVariable Long idUsuario, @Valid @RequestBody ActualizarUsuarioDto actualizarUsuarioDto){
+        UsuarioResponsesDto usuario = usuarioService.actualizarUsuario(idUsuario,actualizarUsuarioDto);
         return ResponseEntity.ok(usuario);
     }
 
