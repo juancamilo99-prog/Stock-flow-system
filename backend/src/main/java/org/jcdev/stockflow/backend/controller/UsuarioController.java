@@ -55,9 +55,10 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarios);
     }
 
+    @PreAuthorize("hasRole('COORDINADOR')")
     @PostMapping
-    public ResponseEntity<Usuario> crearUsuario(@Valid @RequestBody CrearUsuarioDto crearUsuarioDto){
-        Usuario usuario = usuarioService.crearUsuario(crearUsuarioDto);
+    public ResponseEntity<UsuarioResponsesDto> crearUsuario(@Valid @RequestBody CrearUsuarioDto crearUsuarioDto){
+        UsuarioResponsesDto usuario = usuarioService.crearUsuario(crearUsuarioDto);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(usuario);
     }

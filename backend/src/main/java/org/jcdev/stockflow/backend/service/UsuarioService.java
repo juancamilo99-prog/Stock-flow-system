@@ -80,7 +80,7 @@ public class UsuarioService {
 
     //crear un usuario
     @Transactional
-    public Usuario crearUsuario(CrearUsuarioDto crearUsuarioDto){
+    public UsuarioResponsesDto crearUsuario(CrearUsuarioDto crearUsuarioDto){
 
         if (usuarioRepository.existsByEmail(crearUsuarioDto.getEmail())) {
             throw new IllegalArgumentException("Ya existe un usuario con ese email");
@@ -109,7 +109,8 @@ public class UsuarioService {
                 usuario
 
         );
-        return usuario;
+
+        return usuarioMapper.toResponsesDto(usuario);
     }
 
     //actualizar un usuario
