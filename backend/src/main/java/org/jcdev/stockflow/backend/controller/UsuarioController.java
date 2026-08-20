@@ -70,9 +70,10 @@ public class UsuarioController {
         return ResponseEntity.ok(usuario);
     }
 
+    @PreAuthorize("hasRole('COORDINADOR')")
     @DeleteMapping(path = "/{idUsuario}")
-    public ResponseEntity<Usuario> eliminarUsuario(@PathVariable Long idUsuario){
-        Usuario usuario = usuarioService.eliminarUsuario(idUsuario);
+    public ResponseEntity<UsuarioResponsesDto> eliminarUsuario(@PathVariable Long idUsuario){
+        UsuarioResponsesDto usuario = usuarioService.eliminarUsuario(idUsuario);
         return ResponseEntity.ok(usuario);
     }
 }

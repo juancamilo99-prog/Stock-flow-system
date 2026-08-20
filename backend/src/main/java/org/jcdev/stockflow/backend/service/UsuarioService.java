@@ -13,6 +13,7 @@ import org.jcdev.stockflow.backend.enums.usuario.Rol;
 import org.jcdev.stockflow.backend.mapper.UsuarioMapper;
 import org.jcdev.stockflow.backend.repository.AuditoriaRepository;
 import org.jcdev.stockflow.backend.repository.UsuarioRepository;
+import org.jcdev.stockflow.backend.service.security.AuthorizationService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -32,11 +33,15 @@ public class UsuarioService {
     //configuracion security
     private final PasswordEncoder passwordEncoder;
 
-    public UsuarioService(UsuarioRepository usuarioRepository, AuditoriaService auditoriaService, UsuarioMapper usuarioMapper, PasswordEncoder passwordEncoder) {
+    //autorizacion
+    private final AuthorizationService authorizationService;
+
+    public UsuarioService(UsuarioRepository usuarioRepository, AuditoriaService auditoriaService, UsuarioMapper usuarioMapper, PasswordEncoder passwordEncoder, AuthorizationService authorizationService) {
         this.usuarioRepository = usuarioRepository;
         this.auditoriaService = auditoriaService;
         this.usuarioMapper = usuarioMapper;
         this.passwordEncoder = passwordEncoder;
+        this.authorizationService = authorizationService;
     }
 
     //obtener todos los usuarios
@@ -100,14 +105,12 @@ public class UsuarioService {
         usuario =  usuarioRepository.save(usuario);
 
         //crear el servicio de auditoria
-        //TODO refactorizar cuando implementemos Spring Security
         auditoriaService.registrarAuditoria(
                 TipoAccion.CREAR,
                 EntidadAuditoria.USUARIO,
                 "Se ha creado un usuario nuevo: "+usuario.getNombre(),
                 usuario.getId(),
-                usuario
-
+                authorizationService.obtenerUsuarioAutenticado()
         );
 
         return usuarioMapper.toResponsesDto(usuario);
@@ -178,13 +181,12 @@ public class UsuarioService {
         if (detectarCambio){
             usuario = usuarioRepository.save(usuario);
             //crear el servicio de auditoria
-            //TODO refactorizar cuando implementemos Spring Security
             auditoriaService.registrarAuditoria(
                     TipoAccion.ACTUALIZAR,
                     EntidadAuditoria.USUARIO,
-                    "Se ha modificador un usuario ",
+                    "Se ha modificador al usuario: "+usuario.getNombre(),
                     usuario.getId(),
-                    usuario
+                    authorizationService.obtenerUsuarioAutenticado()
             );
         }else {
             throw new IllegalArgumentException("No se detecto ningun cambio");
@@ -195,19 +197,18 @@ public class UsuarioService {
     // eliminar un usuario
     /* Los usuarios se desactivan en lugar de eliminarse, para preservar la integridad y trazabilidad historicas */
     @Transactional
-    public Usuario eliminarUsuario(Long idUsuario){
+    public UsuarioResponsesDto eliminarUsuario(Long idUsuario){
         Usuario usuario = usuarioRepository.findById(idUsuario).orElseThrow(
                 () -> new IllegalArgumentException("El usuario no existe")
         );
         usuarioRepository.delete(usuario);
-        //TODO se refactorizara cuando implementemos Spring Security
         auditoriaService.registrarAuditoria(
                 TipoAccion.ELIMINAR,
                 EntidadAuditoria.USUARIO,
                 "Se ha eliminado el usuario",
                 usuario.getId(),
-                usuario
+                authorizationService.obtenerUsuarioAutenticado()
         );
-        return usuario;
+        return usuarioMapper.toResponsesDto(usuario);
     }
 }

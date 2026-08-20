@@ -23,6 +23,12 @@ public class AuthorizationService {
         return authentication.getName();
     }
 
+    public Usuario obtenerUsuarioAutenticado() {
+        String email = obtenerEmailUsuarioAutenticado();
+        return usuarioRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new IllegalArgumentException("El usuario no existe"));
+    }
+
     public boolean esUsuarioActual(Long idUsuario) {
         Usuario usuario = usuarioRepository.findById(idUsuario)
                 .orElseThrow(() -> new IllegalArgumentException("El usuario no existe"));
