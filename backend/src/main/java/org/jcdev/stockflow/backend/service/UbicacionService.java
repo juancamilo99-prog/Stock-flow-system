@@ -8,6 +8,7 @@ import org.jcdev.stockflow.backend.enums.auditoria.EntidadAuditoria;
 import org.jcdev.stockflow.backend.enums.auditoria.TipoAccion;
 import org.jcdev.stockflow.backend.repository.ProductoRepository;
 import org.jcdev.stockflow.backend.repository.UbicacionRepository;
+import org.jcdev.stockflow.backend.service.security.AuthorizationService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,10 +20,14 @@ public class UbicacionService {
     private final ProductoRepository productoRepository;
     private final AuditoriaService auditoriaService;
 
-    public UbicacionService(UbicacionRepository ubicacionRepository, ProductoRepository productoRepository, AuditoriaService auditoriaService) {
+    //autorizaciones
+    private final AuthorizationService authorizationService;
+
+    public UbicacionService(UbicacionRepository ubicacionRepository, ProductoRepository productoRepository, AuditoriaService auditoriaService, AuthorizationService authorizationService) {
         this.ubicacionRepository = ubicacionRepository;
         this.productoRepository = productoRepository;
         this.auditoriaService = auditoriaService;
+        this.authorizationService = authorizationService;
     }
 
     //obtener todas las ubicaciones
@@ -50,14 +55,13 @@ public class UbicacionService {
         Ubicacion ubicacion = new Ubicacion(codigo, descripcion);
         ubicacion = ubicacionRepository.save(ubicacion);
 
-        //TODO el usuario se obtendra del SecurityContext
         //TODO Volver a hacer obligatorio id_usuario en la base de datos (NOT NULL) una vez todas las auditorías tengan un actor real.
         auditoriaService.registrarAuditoria(
                 TipoAccion.CREAR,
                 EntidadAuditoria.UBICACION,
                 "Se ha creado una nueva ubicacion: "+ubicacion.getId(),
                 ubicacion.getId(),
-                null
+                authorizationService.obtenerUsuarioAutenticado()
         );
         return ubicacion;
     }
@@ -95,6 +99,15 @@ public class UbicacionService {
             detectarCambio = true;
         }
 
+        if (actualizarUbicacionDto.getActivo() != null) {
+            boolean activoActual = ubicacion.getActivo();
+            boolean activoNuevo = actualizarUbicacionDto.getActivo();
+            if (activoActual != activoNuevo) {
+                ubicacion.setActivo(activoNuevo);
+                detectarCambio = true;
+            }
+        }
+
         if (detectarCambio) {
             ubicacion = ubicacionRepository.save(ubicacion);
             auditoriaService.registrarAuditoria(
@@ -102,7 +115,7 @@ public class UbicacionService {
                     EntidadAuditoria.UBICACION,
                     "Se ha actualizado una ubicacion: "+ubicacion.getId(),
                     ubicacion.getId(),
-                    null
+                    authorizationService.obtenerUsuarioAutenticado()
             );
         }else {
             throw new IllegalStateException("No se detecto ningun cambio");

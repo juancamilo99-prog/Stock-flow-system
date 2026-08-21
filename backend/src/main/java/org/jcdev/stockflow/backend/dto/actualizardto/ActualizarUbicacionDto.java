@@ -17,4 +17,5 @@ public class ActualizarUbicacionDto {
     private String codigo;
     @Size(max = 255, message = "La descripcion no puede superar los 255 caracteres")
     private String descripcion;
+    private Boolean activo;
 }

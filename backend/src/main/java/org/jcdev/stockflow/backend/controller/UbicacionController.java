@@ -8,6 +8,7 @@ import org.jcdev.stockflow.backend.entity.Ubicacion;
 import org.jcdev.stockflow.backend.service.UbicacionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,6 +24,7 @@ public class UbicacionController {
     }
 
     //obtener ubicaciones
+    @PreAuthorize("isAuthenticated()")
     @GetMapping
     public ResponseEntity<List<Ubicacion>> obtenerUbicaciones() {
         List<Ubicacion> ubicaciones = ubicacionService.obtenerUbicaciones();
@@ -30,6 +32,7 @@ public class UbicacionController {
     }
 
     //obtener ubicaciones por productos
+    @PreAuthorize("isAuthenticated()")
     @GetMapping(path = "/{idUbicacion}/productos")
     public ResponseEntity<List<Producto>> obtenerProductosPorUbicacion(@PathVariable Long idUbicacion) {
         List<Producto> producto = ubicacionService.obtenerProductosPorUbicacion(idUbicacion);
@@ -37,6 +40,7 @@ public class UbicacionController {
     }
 
     //crear una ubicacion
+    @PreAuthorize("hasRole('COORDINADOR')")
     @PostMapping
     public ResponseEntity<Ubicacion> crearUbicacion(@Valid @RequestBody CrearUbicacionDto crearUbicacionDto) {
         Ubicacion ubicacion = ubicacionService.crearUbicacion(crearUbicacionDto);
@@ -45,6 +49,7 @@ public class UbicacionController {
     }
 
     //actualizar una ubicacion
+    @PreAuthorize("hasRole('COORDINADOR')")
     @PatchMapping(path = "/{idUbicacion}")
     public ResponseEntity<Ubicacion> actualizarUbicacion(@PathVariable Long idUbicacion,@Valid @RequestBody ActualizarUbicacionDto actualizarUbicacionDto) {
         Ubicacion ubicacion = ubicacionService.actualizarUbicacion(idUbicacion, actualizarUbicacionDto);
