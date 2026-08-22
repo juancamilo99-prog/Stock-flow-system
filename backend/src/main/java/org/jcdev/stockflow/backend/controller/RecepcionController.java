@@ -37,6 +37,13 @@ public class RecepcionController {
         return ResponseEntity.ok(recepcion);
     }
 
+    //obtener recepcion por id de usuario
+    @GetMapping(path = "/usuario/{idUsuario}")
+    public ResponseEntity<List<Recepcion>> obtenerRecepcionPorUsuario(@PathVariable Long idUsuario) {
+        List<Recepcion> recepcion = recepcionService.obtenerRecepcionPorUsuario(idUsuario);
+        return ResponseEntity.ok(recepcion);
+    }
+
     //obtener detalles
     @GetMapping(path = "/{idRecepcion}/detalle")
     public ResponseEntity<List<DetalleRecepcion>> obtenerDetalleRecepciones(@PathVariable Long idRecepcion) {

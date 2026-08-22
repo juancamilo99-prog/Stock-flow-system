@@ -64,6 +64,11 @@ public class RecepcionService {
         );
     }
 
+    //obtener una recepcion por identificador de usuario
+    public List<Recepcion> obtenerRecepcionPorUsuario(Long idUsuario) {
+        return recepcionRepository.findByUsuarioId(idUsuario);
+    }
+
     //crear una recepcion
     @Transactional
     public Recepcion crearRecepcion(CrearRecepcionDto crearRecepcionDto) {
