@@ -15,6 +15,7 @@ import org.jcdev.stockflow.backend.repository.PedidoRepository;
 import org.jcdev.stockflow.backend.repository.RecepcionRepository;
 import org.jcdev.stockflow.backend.repository.TareaRepository;
 import org.jcdev.stockflow.backend.repository.UsuarioRepository;
+import org.jcdev.stockflow.backend.service.security.AuthorizationService;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -30,12 +31,17 @@ public class TareaService {
     private final PedidoRepository pedidoRepository;
     private final AuditoriaService auditoriaService;
 
-    public TareaService(TareaRepository tareaRepository, UsuarioRepository usuarioRepository, RecepcionRepository recepcionRepository, PedidoRepository pedidoRepository, AuditoriaService auditoriaService) {
+    //autorizaciones
+    AuthorizationService authorizationService;
+
+    public TareaService(TareaRepository tareaRepository, UsuarioRepository usuarioRepository, RecepcionRepository recepcionRepository,
+                        PedidoRepository pedidoRepository, AuditoriaService auditoriaService, AuthorizationService authorizationService) {
         this.tareaRepository = tareaRepository;
         this.usuarioRepository = usuarioRepository;
         this.recepcionRepository = recepcionRepository;
         this.pedidoRepository = pedidoRepository;
         this.auditoriaService = auditoriaService;
+        this.authorizationService = authorizationService;
     }
 
     //obtener todas las tareas
@@ -83,6 +89,9 @@ public class TareaService {
     //crear una tarea
     @Transactional
     public Tarea crearTarea(CrearTareaDto crearTareaDto){
+
+        //TODO validar jerarquia de asignacion: COORDINADOR puede asignar tarea tanto a encargado como a operario
+        //TODO ENCARGADO soo puede asignar a operario
         Tarea tarea = new Tarea();
         if (crearTareaDto.getIdPedido() != null && crearTareaDto.getIdRecepcion() != null) {
             throw new IllegalArgumentException("Debe indicar un pedido o una recepcion, no ambos");
@@ -122,7 +131,7 @@ public class TareaService {
                 EntidadAuditoria.TAREA,
                 "Se ha creado una tarea",
                 tarea.getId(),
-                tarea.getUsuario()
+                authorizationService.obtenerUsuarioAutenticado()
         );
 
         return tarea;
@@ -131,6 +140,8 @@ public class TareaService {
     //actualizar una tarea
     @Transactional
     public Tarea actualizarTarea(Long idTarea,ActualizarTareaDto actualizarTareaDto){
+        //TODO validar jerarquia de asignacion: COORDINADOR puede asignar tarea tanto a encargado como a operario
+        //TODO ENCARGADO soo puede asignar a operario
         Tarea tarea = tareaRepository.findById(idTarea)
                 .orElseThrow(() -> new IllegalArgumentException("La tarea no existe"));
         boolean seCambioEstado = false;
@@ -174,7 +185,12 @@ public class TareaService {
             tarea.setEstadoTarea(estadoNuevo);
             seCambioEstado = true;
         }
-        tarea = tareaRepository.save(tarea);
+
+        if (detectarCambio || seCambioEstado){
+            tarea = tareaRepository.save(tarea);
+        }else {
+            throw new IllegalArgumentException("No se detecto ningun cambio");
+        }
 
         if (seCambioEstado) {
             //registrar Auditoria
@@ -183,7 +199,7 @@ public class TareaService {
                     EntidadAuditoria.TAREA,
                     "La tarea cambio el estado de " + estadoActual + " a estado " + estadoNuevo,
                     tarea.getId(),
-                    tarea.getUsuario()
+                    authorizationService.obtenerUsuarioAutenticado()
             );
         }
         if (detectarCambio) {
@@ -193,7 +209,7 @@ public class TareaService {
                     EntidadAuditoria.TAREA,
                     "Se ha Actualizado una tarea",
                     tarea.getId(),
-                    tarea.getUsuario()
+                    authorizationService.obtenerUsuarioAutenticado()
             );
         }
         return tarea;
