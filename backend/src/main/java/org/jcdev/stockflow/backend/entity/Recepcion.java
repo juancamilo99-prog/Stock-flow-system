@@ -30,7 +30,7 @@ public class Recepcion {
     @JoinColumn(name = "id_empresa")
     private Empresa empresa;
     @ManyToOne
-    @JoinColumn(name = "id_usuario")
+    @JoinColumn(name = "id_usuario", nullable = false)
     private Usuario usuario;
     @ManyToOne
     @JoinColumn(name = "id_pedido")

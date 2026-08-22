@@ -12,6 +12,7 @@ import org.jcdev.stockflow.backend.enums.pedido.EstadoPedido;
 import org.jcdev.stockflow.backend.enums.recepcion.EstadoRecepcion;
 import org.jcdev.stockflow.backend.enums.movimiento.TipoMovimiento;
 import org.jcdev.stockflow.backend.repository.*;
+import org.jcdev.stockflow.backend.service.security.AuthorizationService;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -34,12 +35,15 @@ public class RecepcionService {
     //service
     ProductoService productoService;
     AuditoriaService auditoriaService;
+    //autorizaciones
+    AuthorizationService authorizationService;
 
 
     public RecepcionService(RecepcionRepository recepcionRepository,  DetalleRecepcionRepository detalleRecepcionRepository,
                             PedidoRepository pedidoRepository, EmpresaRepository empresaRepository,
                             UsuarioRepository usuarioRepository, ProductoRepository productoRepository,  DetallePedidoRepository detallePedidoRepository,
-                            ProductoService productoService, MovimientoInventarioRepository movimientoInventarioRepository, AuditoriaService auditoriaService) {
+                            ProductoService productoService, MovimientoInventarioRepository movimientoInventarioRepository, AuditoriaService auditoriaService,
+                            AuthorizationService authorizationService) {
         this.recepcionRepository = recepcionRepository;
         this.detalleRecepcionRepository = detalleRecepcionRepository;
         this.pedidoRepository = pedidoRepository;
@@ -50,6 +54,7 @@ public class RecepcionService {
         this.productoService = productoService;
         this.movimientoInventarioRepository = movimientoInventarioRepository;
         this.auditoriaService = auditoriaService;
+        this.authorizationService = authorizationService;
     }
 
     //ver todas las recepciones
@@ -84,6 +89,10 @@ public class RecepcionService {
                         () -> new IllegalArgumentException("El usuario no existe")
                 );
 
+        if (!authorizationService.esOperario(usuario.getId())){
+            throw new IllegalArgumentException("No se puede asignar una recepcion a un usuario con un rol diferente a operario");
+        }
+
         if (!pedido.getEmpresa().getId().equals(empresa.getId())) {
             throw new IllegalArgumentException("La empresa de la recepcion no coincide con la empresa del pedido");
         }
@@ -97,7 +106,7 @@ public class RecepcionService {
                 EntidadAuditoria.RECEPCION,
                 "Se ha creado una recepcion nueva.",
                 recepcion.getId(),
-                recepcion.getUsuario()
+                authorizationService.obtenerUsuarioAutenticado()
         );
         return recepcion;
     }
@@ -145,7 +154,7 @@ public class RecepcionService {
                     EntidadAuditoria.RECEPCION,
                     "Se modificado el estado de la recepcion "+recepcion.getId()+" de "+actualEstado+" a "+nuevoEstado,
                     recepcion.getId(),
-                    recepcion.getUsuario()
+                    authorizationService.obtenerUsuarioAutenticado()
             );
         }
         if (detectarCambio) {
@@ -154,7 +163,7 @@ public class RecepcionService {
                     EntidadAuditoria.RECEPCION,
                     "Se modificado la recepcion "+recepcion.getId(),
                     recepcion.getId(),
-                    recepcion.getUsuario()
+                    authorizationService.obtenerUsuarioAutenticado()
             );
         }
 
@@ -162,6 +171,7 @@ public class RecepcionService {
     }
 
     //eliminar recepcion
+    @Transactional
     public void eliminarRecepcion(Long idRecepcion) {
         Recepcion recepcion = recepcionRepository.findById(idRecepcion)
                 .orElseThrow(() -> new IllegalArgumentException("El recepcion no existe"));
@@ -171,7 +181,7 @@ public class RecepcionService {
                 EntidadAuditoria.RECEPCION,
                 "Se ha eliminado una recepcion.",
                 recepcion.getId(),
-                recepcion.getUsuario()
+                authorizationService.obtenerUsuarioAutenticado()
         );
     }
 
