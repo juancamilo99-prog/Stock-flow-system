@@ -32,7 +32,7 @@ public class RecepcionController {
 
     //obtener recepcion por id
     @GetMapping(path = "/{idRecepcion}")
-    public ResponseEntity<Recepcion> obtenerRecepcionPorId(Long idRecepcion) {
+    public ResponseEntity<Recepcion> obtenerRecepcionPorId(@PathVariable Long idRecepcion) {
         Recepcion recepcion = recepcionService.obtenerRecepcionPorId(idRecepcion);
         return ResponseEntity.ok(recepcion);
     }
