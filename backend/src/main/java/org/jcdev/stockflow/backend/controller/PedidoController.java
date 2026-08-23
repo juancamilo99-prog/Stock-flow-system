@@ -1,6 +1,7 @@
 package org.jcdev.stockflow.backend.controller;
 
 import jakarta.validation.Valid;
+import org.apache.coyote.Response;
 import org.jcdev.stockflow.backend.dto.actualizardto.ActualizarDetallePedidoDto;
 import org.jcdev.stockflow.backend.dto.actualizardto.ActualizarPedidoDto;
 import org.jcdev.stockflow.backend.dto.creardto.CrearDetallePedidoDto;
@@ -8,6 +9,9 @@ import org.jcdev.stockflow.backend.dto.creardto.CrearPedidoDto;
 import org.jcdev.stockflow.backend.entity.DetallePedido;
 import org.jcdev.stockflow.backend.entity.Pedido;
 import org.jcdev.stockflow.backend.service.PedidoService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,68 +27,90 @@ public class PedidoController {
     }
 
     //ver pedidos
+    @PreAuthorize("isAuthenticated()")
     @GetMapping
-    public List<Pedido> obtenerPedidos() {
-        return pedidoService.obtenerPedidos();
+    public ResponseEntity<List<Pedido>> obtenerPedidos() {
+        List<Pedido> pedidos = pedidoService.obtenerPedidos();
+        return ResponseEntity.ok(pedidos);
     }
 
     //ver pedidos por identificador
+    @PreAuthorize("isAuthenticated()")
     @GetMapping(path = "/{idPedido}")
-    public Pedido obtenerPedidoPorId(@PathVariable Long idPedido) {
-        return pedidoService.obtenerPedidoId(idPedido);
+    public ResponseEntity<Pedido> obtenerPedidoPorId(@PathVariable Long idPedido) {
+        Pedido pedido = pedidoService.obtenerPedidoId(idPedido);
+        return ResponseEntity.ok(pedido);
     }
 
     //ver detalles por pedido
+    @PreAuthorize("isAuthenticated()")
     @GetMapping(path = "/{idPedido}/detalle")
-    public List<DetallePedido> obtenerDetallePedidos(@PathVariable Long idPedido) {
-        return pedidoService.obtenerDetallesPorPedido(idPedido);
+    public ResponseEntity<List<DetallePedido>> obtenerDetallePedidos(@PathVariable Long idPedido) {
+        List<DetallePedido> pedidos = pedidoService.obtenerDetallesPorPedido(idPedido);
+        return ResponseEntity.ok(pedidos);
     }
 
     //ver detalles
+    @PreAuthorize("isAuthenticated()")
     @GetMapping(path = "/detalles")
-    public List<DetallePedido> obtenerDetalles(){
-        return pedidoService.obtenerDetalles();
+    public ResponseEntity<List<DetallePedido>> obtenerDetalles(){
+        List<DetallePedido> detallePedidos = pedidoService.obtenerDetalles();
+        return ResponseEntity.ok(detallePedidos);
     }
 
     //ver detalles por identificador
+    @PreAuthorize("isAuthenticated()")
     @GetMapping(path = "/detalles/{idDetallePedido}")
-    public DetallePedido obtenerDetallePorId(@PathVariable Long idDetallePedido){
-        return pedidoService.obtenerDetallePorId(idDetallePedido);
+    public ResponseEntity<DetallePedido> obtenerDetallePorId(@PathVariable Long idDetallePedido){
+        DetallePedido detallePedido = pedidoService.obtenerDetallePorId(idDetallePedido);
+        return ResponseEntity.ok(detallePedido);
     }
 
     //crear pedido
+    @PreAuthorize("hasRole('COORDINADOR')")
     @PostMapping
-    public Pedido crearPedido(@Valid @RequestBody CrearPedidoDto crearPedidoDto){
-        return pedidoService.crearPedido(crearPedidoDto);
+    public ResponseEntity<Pedido> crearPedido(@Valid @RequestBody CrearPedidoDto crearPedidoDto){
+        Pedido pedido = pedidoService.crearPedido(crearPedidoDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(pedido);
     }
 
     //actualizar pedido
+    @PreAuthorize("hasRole('COORDINADOR')")
     @PatchMapping(path = "/{idPedido}")
-    public Pedido actualizarPedido(@PathVariable Long idPedido,@Valid @RequestBody ActualizarPedidoDto actualizarPedidoDto){
-        return pedidoService.actualizarPedido(idPedido,actualizarPedidoDto);
+    public ResponseEntity<Pedido> actualizarPedido(@PathVariable Long idPedido,@Valid @RequestBody ActualizarPedidoDto actualizarPedidoDto){
+        Pedido pedido = pedidoService.actualizarPedido(idPedido,actualizarPedidoDto);
+        return ResponseEntity.ok(pedido);
     }
 
     //eliminar pedido
+    @PreAuthorize("hasRole('COORDINADOR')")
     @DeleteMapping(path = "/{idPedido}")
-    public Pedido eliminarPedido(@PathVariable Long idPedido){
-        return pedidoService.eliminarPedido(idPedido);
+    public ResponseEntity<Pedido> eliminarPedido(@PathVariable Long idPedido){
+        Pedido pedidos = pedidoService.eliminarPedido(idPedido);
+        return ResponseEntity.ok(pedidos);
     }
 
     //crear detalle pedido
+    @PreAuthorize("hasRole('COORDINADOR')")
     @PostMapping(path = "/detalles-pedido")
-    public DetallePedido crearDetallePedido(@Valid @RequestBody CrearDetallePedidoDto crearDetallePedidoDto){
-        return pedidoService.crearDetallePedido(crearDetallePedidoDto);
+    public ResponseEntity<DetallePedido> crearDetallePedido(@Valid @RequestBody CrearDetallePedidoDto crearDetallePedidoDto){
+        DetallePedido detallePedido = pedidoService.crearDetallePedido(crearDetallePedidoDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(detallePedido);
     }
 
     //actualizar detalle pedido
+    @PreAuthorize("isAuthenticated()")
     @PatchMapping(path = "/actualizar-detalle/{idDetallePedido}")
-    public DetallePedido actualizarDetallePedido(@PathVariable Long idDetallePedido, @Valid @RequestBody ActualizarDetallePedidoDto actualizarDetallePedidoDto){
-        return pedidoService.actualizarDetallePedido(idDetallePedido,actualizarDetallePedidoDto);
+    public ResponseEntity<DetallePedido> actualizarDetallePedido(@PathVariable Long idDetallePedido, @Valid @RequestBody ActualizarDetallePedidoDto actualizarDetallePedidoDto){
+        DetallePedido detallePedido = pedidoService.actualizarDetallePedido(idDetallePedido,actualizarDetallePedidoDto);
+        return ResponseEntity.ok(detallePedido);
     }
 
     //elminar detalle pedido
+    @PreAuthorize("hasRole('COORDINADOR')")
     @DeleteMapping(path = "/eliminar-detalle/{idDetallePedido}")
-    public DetallePedido eliminarDetallePedido(@PathVariable Long idDetallePedido){
-        return pedidoService.eliminarDetallePedido(idDetallePedido);
+    public ResponseEntity<DetallePedido> eliminarDetallePedido(@PathVariable Long idDetallePedido){
+        DetallePedido detallePedido = pedidoService.eliminarDetallePedido(idDetallePedido);
+        return ResponseEntity.ok(detallePedido);
     }
 }

@@ -10,6 +10,7 @@ import org.jcdev.stockflow.backend.enums.auditoria.EntidadAuditoria;
 import org.jcdev.stockflow.backend.enums.auditoria.TipoAccion;
 import org.jcdev.stockflow.backend.enums.pedido.EstadoPedido;
 import org.jcdev.stockflow.backend.repository.*;
+import org.jcdev.stockflow.backend.service.security.AuthorizationService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -26,13 +27,17 @@ public class PedidoService {
     //servicios
     private final AuditoriaService auditoriaService;
 
-    public PedidoService(PedidoRepository pedidoRepository, DetallePedidoRepository detallePedidoRepository, EmpresaRepository empresaRepository, UsuarioRepository usuarioRepository, ProductoRepository productoRepository, AuditoriaService auditoriaService) {
+    //autorizaciones
+    private final AuthorizationService authorizationService;
+
+    public PedidoService(PedidoRepository pedidoRepository, DetallePedidoRepository detallePedidoRepository, EmpresaRepository empresaRepository, UsuarioRepository usuarioRepository, ProductoRepository productoRepository, AuditoriaService auditoriaService, AuthorizationService authorizationService) {
         this.pedidoRepository = pedidoRepository;
         this.detallePedidoRepository = detallePedidoRepository;
         this.empresaRepository = empresaRepository;
         this.usuarioRepository = usuarioRepository;
         this.productoRepository = productoRepository;
         this.auditoriaService = auditoriaService;
+        this.authorizationService = authorizationService;
     }
 
     //obtener todos los pedidos
@@ -82,7 +87,7 @@ public class PedidoService {
                 EntidadAuditoria.PEDIDO,
                 "Se ha creado un pedido nuevo para la empresa "+empresa.getNombre(),
                 pedido.getId(),
-                pedido.getUsuario()
+                authorizationService.obtenerUsuarioAutenticado()
         );
         return pedido;
     }
@@ -130,7 +135,7 @@ public class PedidoService {
                     EntidadAuditoria.PEDIDO,
                     "Se ha actualizado un pedido de estado "+estadoActual+ " a "+estadoNuevo,
                     pedido.getId(),
-                    pedido.getUsuario()
+                    authorizationService.obtenerUsuarioAutenticado()
             );
         }
         if (detectarCambio) {
@@ -139,7 +144,7 @@ public class PedidoService {
                     EntidadAuditoria.PEDIDO,
                     "Se ha actualizado un pedido",
                     pedido.getId(),
-                    pedido.getUsuario()
+                    authorizationService.obtenerUsuarioAutenticado()
             );
         }
         return pedido;
@@ -157,7 +162,7 @@ public class PedidoService {
                 EntidadAuditoria.PEDIDO,
                 "Se ha eliminado un pedido.",
                 pedido.getId(),
-                pedido.getUsuario()
+                authorizationService.obtenerUsuarioAutenticado()
         );
         return pedido;
     }
@@ -215,7 +220,7 @@ public class PedidoService {
                     EntidadAuditoria.PEDIDO,
                     "Se ha actualizado la cantidad del pedido "+detallePedido.getPedido().getId(),
                     pedido.getId(),
-                    pedido.getUsuario()
+                    authorizationService.obtenerUsuarioAutenticado()
             );
         }else {
             throw new IllegalArgumentException("No se detecto ningun cambio");
