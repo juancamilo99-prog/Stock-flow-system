@@ -10,6 +10,7 @@ import org.jcdev.stockflow.backend.repository.CategoriaRepository;
 import org.jcdev.stockflow.backend.repository.EmpresaRepository;
 import org.jcdev.stockflow.backend.repository.ProductoRepository;
 import org.jcdev.stockflow.backend.repository.UbicacionRepository;
+import org.jcdev.stockflow.backend.service.security.AuthorizationService;
 import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 
@@ -31,13 +32,17 @@ public class ProductoService {
     //servicios
     private final AuditoriaService auditoriaService;
 
+    //autorizaciones
+    private final AuthorizationService authorizationService;
+
     //creamos el constructor y le pasamos el repository
-    public ProductoService(ProductoRepository productoRepository, EmpresaRepository empresaRepository, CategoriaRepository categoriaRepository, UbicacionRepository ubicacionRepository, AuditoriaService auditoriaService) {
+    public ProductoService(ProductoRepository productoRepository, EmpresaRepository empresaRepository, CategoriaRepository categoriaRepository, UbicacionRepository ubicacionRepository, AuditoriaService auditoriaService, AuthorizationService authorizationService) {
         this.productoRepository = productoRepository;
         this.empresaRepository = empresaRepository;
         this.categoriaRepository = categoriaRepository;
         this.ubicacionRepository = ubicacionRepository;
         this.auditoriaService = auditoriaService;
+        this.authorizationService = authorizationService;
     }
 
 
@@ -73,15 +78,17 @@ public class ProductoService {
             throw  new IllegalArgumentException("la fecha de caducidad debe ser posterior a la fecha de produccion");
         }
 
-        Producto producto = new Producto(); // producto vacio
         if (productoRepository.existsByNombreAndEmpresaId(crearProductoDto.getNombre(), crearProductoDto.getIdEmpresa())){
             throw new IllegalArgumentException("Ya existe un producto con ese nombre para esta empresa");
         }
+
+        Producto producto = new Producto(); // producto vacio
         producto.setNombre(crearProductoDto.getNombre());
         producto.setDescripcion(crearProductoDto.getDescripcion());
         producto.setStock(crearProductoDto.getStock());
         producto.setFechaProduccion(crearProductoDto.getFechaProduccion());
         producto.setFechaCaducidad(crearProductoDto.getFechaCaducidad());
+        producto.setActivo(true);
         //buscamos la empresa
         Empresa empresa = empresaRepository.findById(crearProductoDto.getIdEmpresa())
                 .orElseThrow(() ->
@@ -111,7 +118,7 @@ public class ProductoService {
                 EntidadAuditoria.PRODUCTO,
                 "Se ha creado un producto nuevo "+producto.getId(),
                 producto.getId(),
-                null
+                authorizationService.obtenerUsuarioAutenticado()
         );
         return producto;
     }
@@ -206,14 +213,13 @@ public class ProductoService {
         }
 
         if (detectarCambio){
-            //TODO el usuario se obtendra cuando implementemos Spring Security
             producto = productoRepository.save(producto);
             auditoriaService.registrarAuditoria(
                     TipoAccion.ACTUALIZAR,
                     EntidadAuditoria.PRODUCTO,
                     "Se ha actualizado un producto",
                     producto.getId(),
-                    null
+                    authorizationService.obtenerUsuarioAutenticado()
             );
         }else {
             throw new IllegalArgumentException("No se detecto ningún cambio de producto");
@@ -222,9 +228,17 @@ public class ProductoService {
     }
 
     //eliminar un producto
+    @Transactional
     public Producto eliminarProducto(Long idProducto){
         Producto producto = productoRepository.findById(idProducto)
                 .orElseThrow(() -> new IllegalArgumentException("No existe el producto con el id: " + idProducto));
+        auditoriaService.registrarAuditoria(
+                TipoAccion.ELIMINAR,
+                EntidadAuditoria.PRODUCTO,
+                "Se ha eliminado un producto",
+                producto.getId(),
+                authorizationService.obtenerUsuarioAutenticado()
+        );
         productoRepository.delete(producto);
         return producto;
     }
