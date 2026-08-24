@@ -9,6 +9,7 @@ import org.jcdev.stockflow.backend.enums.movimiento.TipoMovimiento;
 import org.jcdev.stockflow.backend.repository.MovimientoInventarioRepository;
 import org.jcdev.stockflow.backend.repository.ProductoRepository;
 import org.jcdev.stockflow.backend.repository.UsuarioRepository;
+import org.jcdev.stockflow.backend.service.security.AuthorizationService;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -21,10 +22,14 @@ public class MovimientoInventarioService {
     private final ProductoRepository productoRepository;
     private final UsuarioRepository usuarioRepository;
 
-    public MovimientoInventarioService(MovimientoInventarioRepository movimientoInventarioRepository, ProductoRepository productoRepository, UsuarioRepository usuarioRepository) {
+    //autorizaciones
+    private final AuthorizationService  authorizationService;
+
+    public MovimientoInventarioService(MovimientoInventarioRepository movimientoInventarioRepository, ProductoRepository productoRepository, UsuarioRepository usuarioRepository, AuthorizationService authorizationService) {
         this.movimientoInventarioRepository = movimientoInventarioRepository;
         this.productoRepository = productoRepository;
         this.usuarioRepository = usuarioRepository;
+        this.authorizationService = authorizationService;
     }
 
     public List<MovimientoInventario> obtenerMovimientoInventarios() {
@@ -54,17 +59,24 @@ public class MovimientoInventarioService {
     //crear un ajuste de inventario
     @Transactional
     public MovimientoInventario ajusteMovimiento(AjusteInventarioDto ajusteInventarioDto) {
+
+        //validamos que el producto exista
         Producto producto = productoRepository.findById(ajusteInventarioDto.getIdProducto())
                 .orElseThrow(
                         ()-> new IllegalArgumentException("El producto no existe")
                 );
-        Usuario usuario = usuarioRepository.findById(ajusteInventarioDto.getIdUsuario())
-                .orElseThrow(
-                        ()-> new IllegalArgumentException("El usuario no existe"));
+
+        //usuario autenticado
+        Usuario usuario = authorizationService.obtenerUsuarioAutenticado();
+
 
         Integer stockSistema = producto.getStock();
         Integer stockReal = ajusteInventarioDto.getCantidad();
         int diferenciaStock = stockReal - stockSistema;
+
+        if (stockReal < 0){
+            throw new IllegalArgumentException("El stock no puede ser menor que 0");
+        }
 
         MovimientoInventario movimientoAjuste = new MovimientoInventario();
         if (diferenciaStock>0){
