@@ -10,6 +10,7 @@ import org.jcdev.stockflow.backend.enums.auditoria.TipoAccion;
 import org.jcdev.stockflow.backend.enums.empresa.TipoEmpresa;
 import org.jcdev.stockflow.backend.repository.EmpresaRepository;
 import org.jcdev.stockflow.backend.repository.ProductoRepository;
+import org.jcdev.stockflow.backend.service.security.AuthorizationService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,10 +24,14 @@ public class EmpresaService {
     //servicios
     private final AuditoriaService auditoriaService;
 
-    public EmpresaService(EmpresaRepository empresaRepository, ProductoRepository productoRepository, AuditoriaService auditoriaService) {
+    //autorizaciones
+    private final AuthorizationService authorizationService;
+
+    public EmpresaService(EmpresaRepository empresaRepository, ProductoRepository productoRepository, AuditoriaService auditoriaService, AuthorizationService authorizationService) {
         this.empresaRepository = empresaRepository;
         this.productoRepository = productoRepository;
         this.auditoriaService = auditoriaService;
+        this.authorizationService = authorizationService;
     }
 
     //obtener todas las empresas
@@ -70,7 +75,7 @@ public class EmpresaService {
                 EntidadAuditoria.EMPRESA,
                 "Se ha creado una empresa nueva: "+empresa.getNombre(),
                 empresa.getId(),
-                null
+                authorizationService.obtenerUsuarioAutenticado()
         );
         return empresa;
     }
@@ -159,7 +164,7 @@ public class EmpresaService {
                     EntidadAuditoria.EMPRESA,
                     "Se ha actualizado una empresa",
                     empresa.getId(),
-                    null
+                    authorizationService.obtenerUsuarioAutenticado()
             );
         }else {
             throw new IllegalArgumentException("No se detecto ningun cambio");
@@ -173,6 +178,13 @@ public class EmpresaService {
                         () -> new IllegalArgumentException("La empresa no existe: "+idEmpresa)
                 );
         empresaRepository.delete(empresa);
+        auditoriaService.registrarAuditoria(
+                TipoAccion.ELIMINAR,
+                EntidadAuditoria.EMPRESA,
+                "Se ha eliminado la empresa: "+empresa.getNombre(),
+                empresa.getId(),
+                authorizationService.obtenerUsuarioAutenticado()
+        );
         return empresa;
     }
 
