@@ -8,6 +8,7 @@ import org.jcdev.stockflow.backend.enums.auditoria.EntidadAuditoria;
 import org.jcdev.stockflow.backend.enums.auditoria.TipoAccion;
 import org.jcdev.stockflow.backend.enums.incidencia.EstadoIncidencia;
 import org.jcdev.stockflow.backend.repository.*;
+import org.jcdev.stockflow.backend.service.security.AuthorizationService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,20 +17,21 @@ import java.util.List;
 public class IncidenciaService {
 
     private final IncidenciaRepository incidenciaRepository;
-    private final UsuarioRepository usuarioRepository;
     private final ProductoRepository productoRepository;
     private final RecepcionRepository recepcionRepository;
 
     //servicios
     AuditoriaService auditoriaService;
+    //autorizaciones
+    AuthorizationService authorizationService;
 
-    public IncidenciaService(IncidenciaRepository incidenciaRepository, UsuarioRepository usuarioRepository, ProductoRepository productoRepository,
-                             RecepcionRepository recepcionRepository, AuditoriaService auditoriaService) {
+    public IncidenciaService(IncidenciaRepository incidenciaRepository, ProductoRepository productoRepository,
+                             RecepcionRepository recepcionRepository, AuditoriaService auditoriaService, AuthorizationService authorizationService) {
         this.incidenciaRepository = incidenciaRepository;
-        this.usuarioRepository = usuarioRepository;
         this.productoRepository = productoRepository;
         this.recepcionRepository = recepcionRepository;
         this.auditoriaService = auditoriaService;
+        this.authorizationService = authorizationService;
     }
 
     //obtener todas las incidencias
@@ -65,9 +67,8 @@ public class IncidenciaService {
     // crear una incidencia
     @Transactional
     public Incidencia crearIncidencia(CrearIncidenciaDto crearIncidenciaDto) {
-        //buscar un usuario
-        Usuario usuario =  usuarioRepository.findById(crearIncidenciaDto.getIdUsuario())
-                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+        //sacamos al usuario autenticado
+        Usuario usuario = authorizationService.obtenerUsuarioAutenticado();
 
         //como no son obligatorios, pueden ser null
         Producto producto = null;
@@ -102,7 +103,7 @@ public class IncidenciaService {
                 EntidadAuditoria.INCIDENCIA,
                 "Se ha creado una incidencia nueva de: "+crearIncidenciaDto.getTipoIncidencia(),
                 incidencia.getId(),
-                incidencia.getUsuario()
+                authorizationService.obtenerUsuarioAutenticado()
         );
         return incidencia;
     }
@@ -155,7 +156,7 @@ public class IncidenciaService {
                     EntidadAuditoria.INCIDENCIA,
                     "Se ha actualizado el estado de la incidencia "+incidencia.getId()+" a "+estadoNuevo,
                     incidencia.getId(),
-                    incidencia.getUsuario()
+                    authorizationService.obtenerUsuarioAutenticado()
             );
         }
         if (detectarCambio) {
@@ -164,7 +165,7 @@ public class IncidenciaService {
                     EntidadAuditoria.INCIDENCIA,
                     "Se ha actualizado una incidencia",
                     incidencia.getId(),
-                    incidencia.getUsuario()
+                    authorizationService.obtenerUsuarioAutenticado()
             );
         }
         return incidencia;
