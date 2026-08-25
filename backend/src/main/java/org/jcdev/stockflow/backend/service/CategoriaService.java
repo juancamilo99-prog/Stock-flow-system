@@ -8,6 +8,7 @@ import org.jcdev.stockflow.backend.enums.auditoria.EntidadAuditoria;
 import org.jcdev.stockflow.backend.enums.auditoria.TipoAccion;
 import org.jcdev.stockflow.backend.repository.CategoriaRepository;
 import org.jcdev.stockflow.backend.repository.ProductoRepository;
+import org.jcdev.stockflow.backend.service.security.AuthorizationService;
 import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.stereotype.Service;
 
@@ -22,11 +23,15 @@ public class CategoriaService {
     //servicios
     private final AuditoriaService auditoriaService;
 
+    //autorizaciones
+    private final AuthorizationService  authorizationService;
 
-    public CategoriaService(ProductoRepository productoRepository, CategoriaRepository categoriaRepository, AuditoriaService auditoriaService) {
+
+    public CategoriaService(ProductoRepository productoRepository, CategoriaRepository categoriaRepository, AuditoriaService auditoriaService, AuthorizationService authorizationService) {
         this.productoRepository = productoRepository;
         this.categoriaRepository = categoriaRepository;
         this.auditoriaService = auditoriaService;
+        this.authorizationService = authorizationService;
     }
 
     //obtener todas las categorias
@@ -56,7 +61,7 @@ public class CategoriaService {
                 EntidadAuditoria.CATEGORIA,
                 "Se ha creado una categoria nueva: "+categoria.getNombre(),
                 categoria.getId(),
-                null
+                authorizationService.obtenerUsuarioAutenticado()
         );
         return categoria;
     }
@@ -92,7 +97,7 @@ public class CategoriaService {
                     EntidadAuditoria.CATEGORIA,
                     "Se ha modificado el nombre de la categoria a: "+categoria.getNombre(),
                     categoria.getId(),
-                    null
+                    authorizationService.obtenerUsuarioAutenticado()
             );
         }else {
             throw new IllegalArgumentException("No se detecto ningún cambio");

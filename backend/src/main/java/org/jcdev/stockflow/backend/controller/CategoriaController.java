@@ -8,6 +8,7 @@ import org.jcdev.stockflow.backend.repository.CategoriaRepository;
 import org.jcdev.stockflow.backend.service.CategoriaService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,6 +24,7 @@ public class CategoriaController {
     }
 
     //obtener todas las categorias
+    @PreAuthorize("isAuthenticated()")
     @GetMapping
     public ResponseEntity<List<Categoria>> obtenerCategorias(){
         List<Categoria> categoria = categoriaService.obtenerCategorias();
@@ -30,6 +32,7 @@ public class CategoriaController {
     }
 
     //obtener los productos por las categorias
+    @PreAuthorize("isAuthenticated()")
     @GetMapping(path = "/{idCategoria}/productos")
     public ResponseEntity<List<Producto>> obtenerProductosPorCategoria(@PathVariable Long idCategoria){
         List<Producto> productos = categoriaService.obtenerProductosPorCategoria(idCategoria);
@@ -37,6 +40,7 @@ public class CategoriaController {
     }
 
     //crear una categoria
+    @PreAuthorize("hasRole('COORDINADOR') OR hasRole('ENCARGADO')")
     @PostMapping
     public ResponseEntity<Categoria> crearCategoria(@Valid @RequestBody CrearCategoriaDto crearCategoriaDto) {
         Categoria categoria = categoriaService.crearCategoria(crearCategoriaDto);
@@ -45,6 +49,7 @@ public class CategoriaController {
     }
 
     //actualizar
+    @PreAuthorize("hasRole('COORDINADOR') OR hasRole('ENCARGADO')")
     @PatchMapping(path = "/{idCategoria}")
     public ResponseEntity<Categoria> actualizarCategoria(@PathVariable Long idCategoria, @Valid @RequestBody CrearCategoriaDto crearCategoriaDto) {
         Categoria categoria = categoriaService.actualizarCategoria(idCategoria, crearCategoriaDto);
