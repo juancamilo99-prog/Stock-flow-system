@@ -55,7 +55,6 @@ public class UbicacionService {
         Ubicacion ubicacion = new Ubicacion(codigo, descripcion);
         ubicacion = ubicacionRepository.save(ubicacion);
 
-        //TODO Volver a hacer obligatorio id_usuario en la base de datos (NOT NULL) una vez todas las auditorías tengan un actor real.
         auditoriaService.registrarAuditoria(
                 TipoAccion.CREAR,
                 EntidadAuditoria.UBICACION,
