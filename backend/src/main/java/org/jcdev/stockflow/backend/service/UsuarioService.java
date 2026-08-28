@@ -10,6 +10,10 @@ import org.jcdev.stockflow.backend.entity.Usuario;
 import org.jcdev.stockflow.backend.enums.auditoria.EntidadAuditoria;
 import org.jcdev.stockflow.backend.enums.auditoria.TipoAccion;
 import org.jcdev.stockflow.backend.enums.usuario.Rol;
+import org.jcdev.stockflow.backend.exception.CambioNoDetectadoException;
+import org.jcdev.stockflow.backend.exception.RecursoDuplicadoException;
+import org.jcdev.stockflow.backend.exception.RecursoNoEncontradoException;
+import org.jcdev.stockflow.backend.exception.handler.GlobalExceptionHandler;
 import org.jcdev.stockflow.backend.mapper.UsuarioMapper;
 import org.jcdev.stockflow.backend.repository.AuditoriaRepository;
 import org.jcdev.stockflow.backend.repository.UsuarioRepository;
@@ -17,6 +21,7 @@ import org.jcdev.stockflow.backend.service.security.AuthorizationService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.ControllerAdvice;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -88,7 +93,7 @@ public class UsuarioService {
     public UsuarioResponsesDto crearUsuario(CrearUsuarioDto crearUsuarioDto){
 
         if (usuarioRepository.existsByEmail(crearUsuarioDto.getEmail())) {
-            throw new IllegalArgumentException("Ya existe un usuario con ese email");
+            throw new RecursoDuplicadoException("Ya existe un usuario con el email");
         }
 
         //usamos el metodo inyectado por spring y guardamos un hash
@@ -121,7 +126,7 @@ public class UsuarioService {
     @Transactional
     public UsuarioResponsesDto actualizarUsuario(Long idUsuario, ActualizarUsuarioDto actualizarUsuarioDto){
         Usuario usuario = usuarioRepository.findById(idUsuario).orElseThrow(
-                () -> new IllegalArgumentException("El usuario no existe"));
+                () -> new RecursoNoEncontradoException("El usuario no existe"));
 
         boolean detectarCambio = false;
 
@@ -138,7 +143,7 @@ public class UsuarioService {
             String emailNuevo = actualizarUsuarioDto.getEmail().trim();
             if (!emailActual.equalsIgnoreCase(emailNuevo)){
                 if (usuarioRepository.existsByEmailIgnoreCaseAndIdNot(emailNuevo, idUsuario)){
-                    throw new IllegalArgumentException("Ya existe un usuario con ese email");
+                    throw new RecursoDuplicadoException("Ya existe un usuario con ese email");
                 }
                 usuario.setEmail(emailNuevo);
                 detectarCambio = true;
@@ -189,7 +194,7 @@ public class UsuarioService {
                     authorizationService.obtenerUsuarioAutenticado()
             );
         }else {
-            throw new IllegalArgumentException("No se detecto ningun cambio");
+            throw new CambioNoDetectadoException("No se detecto ningun cambio");
         }
         return usuarioMapper.toResponsesDto(usuario);
     }
@@ -199,7 +204,7 @@ public class UsuarioService {
     @Transactional
     public UsuarioResponsesDto eliminarUsuario(Long idUsuario){
         Usuario usuario = usuarioRepository.findById(idUsuario).orElseThrow(
-                () -> new IllegalArgumentException("El usuario no existe")
+                () -> new RecursoNoEncontradoException("El usuario no existe")
         );
         usuarioRepository.delete(usuario);
         auditoriaService.registrarAuditoria(
