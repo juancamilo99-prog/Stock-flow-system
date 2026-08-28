@@ -11,6 +11,9 @@ import org.jcdev.stockflow.backend.enums.auditoria.EntidadAuditoria;
 import org.jcdev.stockflow.backend.enums.auditoria.TipoAccion;
 import org.jcdev.stockflow.backend.enums.tarea.EstadoTarea;
 import org.jcdev.stockflow.backend.enums.tarea.PrioridadTarea;
+import org.jcdev.stockflow.backend.exception.CambioNoDetectadoException;
+import org.jcdev.stockflow.backend.exception.RecursoNoEncontradoException;
+import org.jcdev.stockflow.backend.exception.TransicionEstadoInvalidaException;
 import org.jcdev.stockflow.backend.repository.PedidoRepository;
 import org.jcdev.stockflow.backend.repository.RecepcionRepository;
 import org.jcdev.stockflow.backend.repository.TareaRepository;
@@ -68,7 +71,7 @@ public class TareaService {
     public List<Tarea> obtenerTareasPorEstadoTarea(EstadoTarea estadoTarea){
       List<Tarea> tareas = tareaRepository.findByEstadoTarea(estadoTarea);
       if (tareas.isEmpty()){
-          throw new IllegalArgumentException(
+          throw new RecursoNoEncontradoException(
                   "No existe tareas con el estado: " + estadoTarea
           );
       }
@@ -79,7 +82,7 @@ public class TareaService {
     public List<Tarea> obtenerTareasPorPrioridadTarea(PrioridadTarea prioridadTarea){
         List<Tarea> tareas = tareaRepository.findByPrioridadTarea(prioridadTarea);
         if (tareas.isEmpty()){
-            throw new IllegalArgumentException(
+            throw new RecursoNoEncontradoException(
                     "No existen tareas con la prioridad: " + prioridadTarea
             );
         }
@@ -98,21 +101,21 @@ public class TareaService {
         }
         if (crearTareaDto.getIdUsuario() != null) {
             Usuario usuario = usuarioRepository.findById(crearTareaDto.getIdUsuario())
-                    .orElseThrow(() -> new IllegalArgumentException("El usuario no existe"));
+                    .orElseThrow(() -> new RecursoNoEncontradoException("El usuario no existe"));
             tarea.setUsuario(usuario);
         }
         Pedido pedido = null;
         Recepcion recepcion = null;
         if (crearTareaDto.getIdRecepcion() != null) {
             recepcion = recepcionRepository.findById(crearTareaDto.getIdRecepcion())
-                    .orElseThrow(() -> new IllegalArgumentException("La recepcion no existe"));
+                    .orElseThrow(() -> new RecursoNoEncontradoException("La recepcion no existe"));
             pedido = recepcion.getPedido();
             tarea.setRecepcion(recepcion);
             tarea.setPedido(pedido);
         }
         if (crearTareaDto.getIdRecepcion() == null && crearTareaDto.getIdPedido() != null) {
             pedido = pedidoRepository.findById(crearTareaDto.getIdPedido())
-                    .orElseThrow(()-> new IllegalArgumentException("El pedido no existe"));
+                    .orElseThrow(()-> new RecursoNoEncontradoException("El pedido no existe"));
             tarea.setPedido(pedido);
         }
         if (pedido == null && recepcion == null) {
@@ -143,7 +146,7 @@ public class TareaService {
         //TODO validar jerarquia de asignacion: COORDINADOR puede asignar tarea tanto a encargado como a operario
         //TODO ENCARGADO soo puede asignar a operario
         Tarea tarea = tareaRepository.findById(idTarea)
-                .orElseThrow(() -> new IllegalArgumentException("La tarea no existe"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("La tarea no existe"));
         boolean seCambioEstado = false;
         boolean detectarCambio = false;
 
@@ -171,12 +174,12 @@ public class TareaService {
 
         if (estadoNuevo != null && estadoNuevo != estadoActual){
             switch (estadoActual){
-                case resuelta -> throw new IllegalArgumentException(
+                case resuelta -> throw new TransicionEstadoInvalidaException(
                         "Una tarea resuelta no puede cambiar de estado"
                 );
                 case en_proceso -> {
                     if (estadoNuevo == EstadoTarea.pendiente){
-                        throw new IllegalArgumentException(
+                        throw new TransicionEstadoInvalidaException(
                                 "Una tarea en proceso no puede volver a estar pendiente"
                         );
                     }
@@ -189,7 +192,7 @@ public class TareaService {
         if (detectarCambio || seCambioEstado){
             tarea = tareaRepository.save(tarea);
         }else {
-            throw new IllegalArgumentException("No se detecto ningun cambio");
+            throw new CambioNoDetectadoException("No se detecto ningun cambio");
         }
 
         if (seCambioEstado) {
