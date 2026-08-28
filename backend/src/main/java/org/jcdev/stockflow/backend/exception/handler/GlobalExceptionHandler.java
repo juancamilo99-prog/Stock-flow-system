@@ -51,4 +51,14 @@ public class GlobalExceptionHandler {
 
         return new ResponseEntity<>(exceptionResponse, HttpStatus.UNPROCESSABLE_CONTENT);
     }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ExceptionResponse> invalidateArgumentException(final IllegalArgumentException invalidArgumentException) {
+
+        ExceptionResponse exceptionResponse = new ExceptionResponse(
+            HttpStatus.BAD_REQUEST.value(),  "ARGUMENTO_INVALIDO",  invalidArgumentException.getMessage()
+        );
+
+        return new ResponseEntity<>(exceptionResponse, HttpStatus.BAD_REQUEST);
+    }
 }
