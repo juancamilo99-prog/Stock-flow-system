@@ -6,6 +6,9 @@ import org.jcdev.stockflow.backend.dto.creardto.CrearUbicacionDto;
 import org.jcdev.stockflow.backend.entity.*;
 import org.jcdev.stockflow.backend.enums.auditoria.EntidadAuditoria;
 import org.jcdev.stockflow.backend.enums.auditoria.TipoAccion;
+import org.jcdev.stockflow.backend.exception.CambioNoDetectadoException;
+import org.jcdev.stockflow.backend.exception.RecursoDuplicadoException;
+import org.jcdev.stockflow.backend.exception.RecursoNoEncontradoException;
 import org.jcdev.stockflow.backend.repository.ProductoRepository;
 import org.jcdev.stockflow.backend.repository.UbicacionRepository;
 import org.jcdev.stockflow.backend.service.security.AuthorizationService;
@@ -39,7 +42,7 @@ public class UbicacionService {
     public List<Producto> obtenerProductosPorUbicacion(Long idUbicacion){
         Ubicacion ubicacion = ubicacionRepository.findById(idUbicacion)
                 .orElseThrow(() ->
-                        new IllegalArgumentException("La ubicacion no existe"+idUbicacion
+                        new RecursoNoEncontradoException("La ubicacion no existe"+idUbicacion
                         ));
         return productoRepository.findByUbicacionId(ubicacion.getId());
     }
@@ -50,7 +53,7 @@ public class UbicacionService {
         String codigo = crearUbicacionDto.getCodigo().trim().toUpperCase();
         String descripcion = crearUbicacionDto.getDescripcion().trim();
         if (ubicacionRepository.existsByCodigoIgnoreCase(codigo)) {
-            throw new IllegalArgumentException("La ubicacion ya existe: "+codigo);
+            throw new RecursoDuplicadoException("La ubicacion ya existe: "+codigo);
         }
         Ubicacion ubicacion = new Ubicacion(codigo, descripcion);
         ubicacion = ubicacionRepository.save(ubicacion);
@@ -69,7 +72,7 @@ public class UbicacionService {
     @Transactional
     public Ubicacion actualizarUbicacion(Long idUbicacion,ActualizarUbicacionDto actualizarUbicacionDto){
         Ubicacion ubicacion = ubicacionRepository.findById(idUbicacion)
-                .orElseThrow(() -> new IllegalArgumentException("La ubicacion no existe"+idUbicacion));
+                .orElseThrow(() -> new RecursoNoEncontradoException("La ubicacion no existe"+idUbicacion));
         boolean detectarCambio = false;
         if (actualizarUbicacionDto.getDescripcion() != null) {
             String descripcionNueva = actualizarUbicacionDto.getDescripcion().trim();
@@ -77,7 +80,7 @@ public class UbicacionService {
                 throw new IllegalArgumentException("La descripcion no puede estar vacia");
             }
             if (ubicacion.getDescripcion().equalsIgnoreCase(descripcionNueva)) {
-                throw new IllegalArgumentException("La nueva descripcion debe ser diferente de la actual");
+                throw new CambioNoDetectadoException("La nueva descripcion debe ser diferente de la actual");
             }
             ubicacion.setDescripcion(descripcionNueva);
             detectarCambio = true;
@@ -89,10 +92,10 @@ public class UbicacionService {
                 throw new IllegalArgumentException("El codigo no puede estar vacia");
             }
             if (ubicacion.getCodigo().equalsIgnoreCase(codigoNuevo)) {
-                throw new IllegalArgumentException("El nuevo codigo no puede ser el mismo que el actual");
+                throw new CambioNoDetectadoException("El nuevo codigo no puede ser el mismo que el actual");
             }
             if (ubicacionRepository.existsByCodigoIgnoreCase(codigoNuevo)) {
-                throw new IllegalArgumentException("La ubicacion ya existe: "+codigoNuevo);
+                throw new RecursoDuplicadoException("La ubicacion ya existe: "+codigoNuevo);
             }
             ubicacion.setCodigo(codigoNuevo);
             detectarCambio = true;
@@ -117,7 +120,7 @@ public class UbicacionService {
                     authorizationService.obtenerUsuarioAutenticado()
             );
         }else {
-            throw new IllegalStateException("No se detecto ningun cambio");
+            throw new CambioNoDetectadoException("No se detecto ningun cambio");
         }
         return ubicacion;
     }
