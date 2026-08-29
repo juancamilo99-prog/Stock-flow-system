@@ -11,6 +11,9 @@ import org.jcdev.stockflow.backend.enums.auditoria.TipoAccion;
 import org.jcdev.stockflow.backend.enums.pedido.EstadoPedido;
 import org.jcdev.stockflow.backend.enums.recepcion.EstadoRecepcion;
 import org.jcdev.stockflow.backend.enums.movimiento.TipoMovimiento;
+import org.jcdev.stockflow.backend.exception.CambioNoDetectadoException;
+import org.jcdev.stockflow.backend.exception.RecursoNoEncontradoException;
+import org.jcdev.stockflow.backend.exception.TransicionEstadoInvalidaException;
 import org.jcdev.stockflow.backend.repository.*;
 import org.jcdev.stockflow.backend.service.security.AuthorizationService;
 import org.springframework.stereotype.Service;
@@ -65,7 +68,7 @@ public class RecepcionService {
     //ver una recepcion por identificador
     public Recepcion obtenerRecepcionPorId(Long idRecepcion) {
         return recepcionRepository.findById(idRecepcion).orElseThrow(
-                () -> new IllegalArgumentException("El recepcion no existe")
+                () -> new RecursoNoEncontradoException("El recepcion no existe")
         );
     }
 
@@ -79,14 +82,14 @@ public class RecepcionService {
     public Recepcion crearRecepcion(CrearRecepcionDto crearRecepcionDto) {
         Pedido pedido = pedidoRepository.findById(crearRecepcionDto.getIdPedido())
                 .orElseThrow(
-                        () -> new IllegalArgumentException("El pedido no existe")
+                        () -> new RecursoNoEncontradoException("El pedido no existe")
                 );
         Empresa empresa = empresaRepository.findById(crearRecepcionDto.getIdEmpresa())
                 .orElseThrow(
-                        () -> new IllegalArgumentException("El empresa no existe"));
+                        () -> new RecursoNoEncontradoException("El empresa no existe"));
         Usuario usuario = usuarioRepository.findById(crearRecepcionDto.getIdUsuario())
                 .orElseThrow(
-                        () -> new IllegalArgumentException("El usuario no existe")
+                        () -> new RecursoNoEncontradoException("El usuario no existe")
                 );
 
         if (!authorizationService.esOperario(usuario.getId())){
@@ -97,7 +100,7 @@ public class RecepcionService {
             throw new IllegalArgumentException("La empresa de la recepcion no coincide con la empresa del pedido");
         }
         if (pedido.getEstadoPedido() == EstadoPedido.CANCELADO || pedido.getEstadoPedido() == EstadoPedido.RECIBIDO){
-            throw new IllegalArgumentException("No se puede crear una recepcion para un pedido cancelado o recibido");
+            throw new TransicionEstadoInvalidaException("No se puede crear una recepcion para un pedido cancelado o recibido");
         }
         Recepcion recepcion = new Recepcion(crearRecepcionDto.getObservaciones(), empresa, usuario, pedido);
         recepcion = recepcionRepository.save(recepcion);
@@ -115,7 +118,7 @@ public class RecepcionService {
     @Transactional
     public Recepcion actualizarRecepcion(Long idRecepcion, ActualizarRecepcionDto actualizarRecepcionDto) {
         Recepcion recepcion = recepcionRepository.findById(idRecepcion)
-                .orElseThrow(() -> new IllegalArgumentException("El recepcion no existe"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("El recepcion no existe"));
         boolean detectarCambio = false;
         boolean cambioEstado = false;
         if (actualizarRecepcionDto.getObservaciones() != null && !actualizarRecepcionDto.getObservaciones().isBlank()) {
@@ -132,11 +135,11 @@ public class RecepcionService {
 
         if (nuevoEstado != null && nuevoEstado != actualEstado) {
             switch (actualEstado) {
-                case cancelado -> throw new IllegalArgumentException("Una recepcion cancelada no puede cambiar de estado");
-                case recibida ->  throw new IllegalArgumentException("Una recepcion recibida no puede cambiar de estado");
+                case cancelado -> throw new TransicionEstadoInvalidaException("Una recepcion cancelada no puede cambiar de estado");
+                case recibida ->  throw new TransicionEstadoInvalidaException("Una recepcion recibida no puede cambiar de estado");
                 case parcial -> {
                     if (nuevoEstado != EstadoRecepcion.recibida){
-                        throw new IllegalArgumentException("Una recepcion parcial solo puede cambiar a estado recibido.");
+                        throw new TransicionEstadoInvalidaException("Una recepcion parcial solo puede cambiar a estado recibido.");
                     }
                 }
             }
@@ -146,7 +149,7 @@ public class RecepcionService {
         if (cambioEstado || detectarCambio) {
             recepcion = recepcionRepository.save(recepcion);
         }else {
-            throw new IllegalArgumentException("No se detecto ningún cambio");
+            throw new CambioNoDetectadoException("No se detecto ningún cambio");
         }
         if (cambioEstado){
             auditoriaService.registrarAuditoria(
@@ -174,7 +177,7 @@ public class RecepcionService {
     @Transactional
     public void eliminarRecepcion(Long idRecepcion) {
         Recepcion recepcion = recepcionRepository.findById(idRecepcion)
-                .orElseThrow(() -> new IllegalArgumentException("El recepcion no existe"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("El recepcion no existe"));
         recepcionRepository.delete(recepcion);
         auditoriaService.registrarAuditoria(
                 TipoAccion.ELIMINAR,
@@ -189,7 +192,7 @@ public class RecepcionService {
     public List<DetalleRecepcion> obtenerDetalleRecepciones(Long idRecepcion) {
         recepcionRepository.findById(idRecepcion)
                 .orElseThrow(() ->
-                        new IllegalArgumentException("El recepcion no existe"));
+                        new RecursoNoEncontradoException("El recepcion no existe"));
 
         return detalleRecepcionRepository.findByRecepcionId(idRecepcion);
     }
@@ -204,7 +207,7 @@ public class RecepcionService {
     public List<DetalleRecepcion> crearDetalleRecepcion(CrearDetalleRecepcionDto crearDetalleRecepcionDto) {
         //buscamos la recepcion
         Recepcion recepcion = recepcionRepository.findById(crearDetalleRecepcionDto.getIdRecepcion())
-                .orElseThrow(() -> new IllegalArgumentException("El recepcion no existe"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("El recepcion no existe"));
 
         if (recepcion.getEstadoRecepcion() == EstadoRecepcion.cancelado || recepcion.getEstadoRecepcion() == EstadoRecepcion.recibida) {
             throw new IllegalArgumentException("No se pueden añadir productos a una recepcion cerrada.");
@@ -215,7 +218,7 @@ public class RecepcionService {
         //nos traemos toda la lista de los detalles
         List<DetallePedido> detallesPedido = detallePedidoRepository.findByPedidoId(idPedido);
         if (detallesPedido.isEmpty()) {
-            throw new IllegalArgumentException("El pedido no tiene detalles.");
+            throw new RecursoNoEncontradoException("El pedido no tiene detalles.");
         }
 
         //creamos una lista vacia
@@ -248,7 +251,7 @@ public class RecepcionService {
     public DetalleRecepcion actualizarDetalleRecepcion(Long idDetalleRecepcion, ActualizarDetalleRecepcionDto actualizarDetalleRecepcionDto) {
 
         DetalleRecepcion detalleRecepcion = detalleRecepcionRepository.findById(idDetalleRecepcion)
-                .orElseThrow(() -> new IllegalArgumentException("El detalle de recepcion no existe"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("El detalle de recepcion no existe"));
 
 
         //guardamos el valor anterior antes de modificar la entidad
