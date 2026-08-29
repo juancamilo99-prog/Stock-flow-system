@@ -6,6 +6,7 @@ import org.jcdev.stockflow.backend.entity.MovimientoInventario;
 import org.jcdev.stockflow.backend.entity.Producto;
 import org.jcdev.stockflow.backend.entity.Usuario;
 import org.jcdev.stockflow.backend.enums.movimiento.TipoMovimiento;
+import org.jcdev.stockflow.backend.exception.RecursoNoEncontradoException;
 import org.jcdev.stockflow.backend.repository.MovimientoInventarioRepository;
 import org.jcdev.stockflow.backend.repository.ProductoRepository;
 import org.jcdev.stockflow.backend.repository.UsuarioRepository;
@@ -63,7 +64,7 @@ public class MovimientoInventarioService {
         //validamos que el producto exista
         Producto producto = productoRepository.findById(ajusteInventarioDto.getIdProducto())
                 .orElseThrow(
-                        ()-> new IllegalArgumentException("El producto no existe")
+                        ()-> new RecursoNoEncontradoException("El producto no existe")
                 );
 
         //usuario autenticado
