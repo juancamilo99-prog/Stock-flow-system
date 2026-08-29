@@ -9,6 +9,9 @@ import org.jcdev.stockflow.backend.entity.*;
 import org.jcdev.stockflow.backend.enums.auditoria.EntidadAuditoria;
 import org.jcdev.stockflow.backend.enums.auditoria.TipoAccion;
 import org.jcdev.stockflow.backend.enums.pedido.EstadoPedido;
+import org.jcdev.stockflow.backend.exception.CambioNoDetectadoException;
+import org.jcdev.stockflow.backend.exception.RecursoNoEncontradoException;
+import org.jcdev.stockflow.backend.exception.TransicionEstadoInvalidaException;
 import org.jcdev.stockflow.backend.repository.*;
 import org.jcdev.stockflow.backend.service.security.AuthorizationService;
 import org.springframework.stereotype.Service;
@@ -49,14 +52,14 @@ public class PedidoService {
     public Pedido obtenerPedidoId(Long idPedido){
         return pedidoRepository.findById(idPedido)
                 .orElseThrow(
-                        () -> new IllegalArgumentException("Pedido no encontrado")
+                        () -> new RecursoNoEncontradoException("Pedido no encontrado")
                 );
     }
 
     //obtenemos el detalle de pedidos por identificador
     public List<DetallePedido> obtenerDetallesPorPedido(Long idPedido){
         pedidoRepository.findById(idPedido).orElseThrow(() ->
-                new IllegalArgumentException("El pedido no existe")
+                new RecursoNoEncontradoException("El pedido no existe")
         );
 
         return detallePedidoRepository.findByPedidoId(idPedido);
@@ -70,16 +73,16 @@ public class PedidoService {
     //obtener detalle pedido por su identificador
     public DetallePedido obtenerDetallePorId(Long idDetallePedido){
         return detallePedidoRepository.findById(idDetallePedido)
-                .orElseThrow(() -> new IllegalArgumentException("El detalle de pedido no existe"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("El detalle de pedido no existe"));
     }
 
     //crear pedido
     @Transactional
     public Pedido crearPedido(CrearPedidoDto crearPedidoDto){
         Empresa empresa = empresaRepository.findById(crearPedidoDto.getIdEmpresa())
-                    .orElseThrow(() -> new IllegalArgumentException("El empresa no existe"));
+                    .orElseThrow(() -> new RecursoNoEncontradoException("El empresa no existe"));
         Usuario usuario = usuarioRepository.findById(crearPedidoDto.getIdUsuario())
-                .orElseThrow(() -> new IllegalArgumentException("El usuario no existe"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("El usuario no existe"));
         Pedido pedido = new Pedido(crearPedidoDto.getObservaciones(), empresa, usuario);
         pedido = pedidoRepository.save(pedido);
         auditoriaService.registrarAuditoria(
@@ -96,7 +99,7 @@ public class PedidoService {
     @Transactional
     public Pedido actualizarPedido(Long idPedido, ActualizarPedidoDto actualizarPedidoDto){
         Pedido pedido = pedidoRepository.findById(idPedido)
-                .orElseThrow(() -> new IllegalArgumentException("El pedido no existe"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("El pedido no existe"));
 
         boolean detectarCambio = false;
         boolean cambioEstado = false;
@@ -115,11 +118,11 @@ public class PedidoService {
         EstadoPedido estadoActual = pedido.getEstadoPedido();
         if (estadoNuevo != null &&  estadoNuevo != estadoActual) {
             switch (estadoActual){
-                case RECIBIDO -> throw new IllegalArgumentException("Un pedido recibido no puede cambiar de estado");
-                case CANCELADO -> throw new IllegalArgumentException("Un pedido cancelado no puede cambiar de estado");
+                case RECIBIDO -> throw new TransicionEstadoInvalidaException("Un pedido recibido no puede cambiar de estado");
+                case CANCELADO -> throw new TransicionEstadoInvalidaException("Un pedido cancelado no puede cambiar de estado");
                 case PARCIAL -> {
                     if (estadoNuevo != EstadoPedido.RECIBIDO) {
-                        throw new IllegalArgumentException("Un pedido en estado parcial, solo puede cambiar de estado a recibido.");
+                        throw new TransicionEstadoInvalidaException("Un pedido en estado parcial, solo puede cambiar de estado a recibido.");
                     }
                 }
             }
@@ -154,7 +157,7 @@ public class PedidoService {
     @Transactional
     public Pedido eliminarPedido(Long idPedido){
         Pedido pedido = pedidoRepository.findById(idPedido)
-                .orElseThrow(() -> new IllegalArgumentException("El pedido no existe"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("El pedido no existe"));
         pedidoRepository.delete(pedido);
         //auditoria
         auditoriaService.registrarAuditoria(
@@ -171,17 +174,17 @@ public class PedidoService {
     public DetallePedido crearDetallePedido(CrearDetallePedidoDto crearDetallePedidoDto){
 
         Pedido pedido = pedidoRepository.findById(crearDetallePedidoDto.getIdPedido())
-                .orElseThrow(() -> new IllegalArgumentException("El pedido no existe"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("El pedido no existe"));
         Producto producto = productoRepository.findById(crearDetallePedidoDto.getIdProducto())
-                .orElseThrow(() -> new IllegalArgumentException("El producto no existe"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("El producto no existe"));
         if (crearDetallePedidoDto.getCantidadSolicitada() <= 0){
             throw new IllegalArgumentException("La cantidad de solicitada debe ser mayor que 0");
         }
         if (pedido.getEstadoPedido() == EstadoPedido.CANCELADO || pedido.getEstadoPedido() == EstadoPedido.RECIBIDO){
-            throw new IllegalArgumentException("no se puede añadir un detalle a un pedido cancelado o recibido");
+            throw new TransicionEstadoInvalidaException("no se puede añadir un detalle a un pedido cancelado o recibido");
         }
         if (detallePedidoRepository.existsByPedidoIdAndProductoId(pedido.getId(), producto.getId())){
-            throw new IllegalArgumentException("Ya existe un producto con el detalle de solicitado");
+            throw new TransicionEstadoInvalidaException("Ya existe un producto con el detalle de solicitado");
         }
 
         DetallePedido detallePedido = new DetallePedido(crearDetallePedidoDto.getCantidadSolicitada(),pedido,producto);
@@ -192,13 +195,13 @@ public class PedidoService {
     @Transactional
     public DetallePedido actualizarDetallePedido(Long idDetallePedido ,ActualizarDetallePedidoDto actualizarDetallePedidoDto){
         DetallePedido detallePedido = detallePedidoRepository.findById(idDetallePedido)
-                .orElseThrow(() -> new IllegalArgumentException("El detalle de pedido no existe"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("El detalle de pedido no existe"));
 
         boolean cambioCantidad = false;
         Pedido pedido = detallePedido.getPedido();
 
         if (pedido.getEstadoPedido() == EstadoPedido.RECIBIDO || pedido.getEstadoPedido() == EstadoPedido.CANCELADO){
-            throw new IllegalArgumentException(
+            throw new TransicionEstadoInvalidaException(
                     "No se puede modificar un detalle de un pedido recibido o cancelado"
             );
         }
@@ -223,7 +226,7 @@ public class PedidoService {
                     authorizationService.obtenerUsuarioAutenticado()
             );
         }else {
-            throw new IllegalArgumentException("No se detecto ningun cambio");
+            throw new CambioNoDetectadoException("No se detecto ningun cambio");
         }
 
         return detallePedido;
@@ -233,11 +236,11 @@ public class PedidoService {
     public DetallePedido eliminarDetallePedido(Long idDetallePedido){
         DetallePedido detallePedido = detallePedidoRepository.findById(idDetallePedido)
                 .orElseThrow(
-                        () -> new IllegalArgumentException("El detalle del pedido no existe")
+                        () -> new RecursoNoEncontradoException("El detalle del pedido no existe")
                 );
         Pedido pedido = detallePedido.getPedido();
         if (pedido.getEstadoPedido() == EstadoPedido.CANCELADO || pedido.getEstadoPedido() == EstadoPedido.RECIBIDO || pedido.getEstadoPedido() == EstadoPedido.PARCIAL){
-            throw new IllegalArgumentException(
+            throw new TransicionEstadoInvalidaException(
                     "No se puede eliminar un detalle de un pedido cancelado, recibido o parcial"
             );
         }
