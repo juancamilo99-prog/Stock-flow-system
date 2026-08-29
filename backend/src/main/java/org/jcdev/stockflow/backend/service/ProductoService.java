@@ -6,6 +6,9 @@ import org.jcdev.stockflow.backend.dto.creardto.CrearProductoDto;
 import org.jcdev.stockflow.backend.entity.*;
 import org.jcdev.stockflow.backend.enums.auditoria.EntidadAuditoria;
 import org.jcdev.stockflow.backend.enums.auditoria.TipoAccion;
+import org.jcdev.stockflow.backend.exception.CambioNoDetectadoException;
+import org.jcdev.stockflow.backend.exception.RecursoDuplicadoException;
+import org.jcdev.stockflow.backend.exception.RecursoNoEncontradoException;
 import org.jcdev.stockflow.backend.repository.CategoriaRepository;
 import org.jcdev.stockflow.backend.repository.EmpresaRepository;
 import org.jcdev.stockflow.backend.repository.ProductoRepository;
@@ -56,7 +59,7 @@ public class ProductoService {
 
         return productoRepository.findById(idProducto)
                 .orElseThrow(() ->
-                        new IllegalArgumentException("No existe el producto con el id: " + idProducto));
+                        new RecursoNoEncontradoException("No existe el producto con el id: " + idProducto));
     }
 
     //metodo para generar un codigo de barras
@@ -79,7 +82,7 @@ public class ProductoService {
         }
 
         if (productoRepository.existsByNombreAndEmpresaId(crearProductoDto.getNombre(), crearProductoDto.getIdEmpresa())){
-            throw new IllegalArgumentException("Ya existe un producto con ese nombre para esta empresa");
+            throw new RecursoDuplicadoException("Ya existe un producto con ese nombre para esta empresa");
         }
 
         Producto producto = new Producto(); // producto vacio
@@ -92,19 +95,19 @@ public class ProductoService {
         //buscamos la empresa
         Empresa empresa = empresaRepository.findById(crearProductoDto.getIdEmpresa())
                 .orElseThrow(() ->
-                        new IllegalArgumentException("No existe la empresa con el id introducido para crear este producto: "+crearProductoDto.getIdEmpresa()));
+                        new RecursoNoEncontradoException("No existe la empresa con el id introducido para crear este producto: "+crearProductoDto.getIdEmpresa()));
         //la relacionamos
         producto.setEmpresa(empresa);
         //buscamos la categoria
         Categoria categoria = categoriaRepository.findById(crearProductoDto.getIdCategoria())
                 .orElseThrow(() ->
-                        new IllegalArgumentException("No existe la categoria con el id: " + crearProductoDto.getIdCategoria()));
+                        new RecursoNoEncontradoException("No existe la categoria con el id: " + crearProductoDto.getIdCategoria()));
         //la relacionamos
         producto.setCategoria(categoria);
         //buscamos la ubicacion
         Ubicacion ubicacion = ubicacionRepository.findById(crearProductoDto.getIdUbicacion())
                 .orElseThrow(() ->
-                        new IllegalArgumentException("No existe ubicacion para crear este producto: "+crearProductoDto.getIdUbicacion()));
+                        new RecursoNoEncontradoException("No existe ubicacion para crear este producto: "+crearProductoDto.getIdUbicacion()));
         //la relacionamos
         producto.setUbicacion(ubicacion);
         //creamos el producto
@@ -127,7 +130,7 @@ public class ProductoService {
     @Transactional
     public Producto actualizarProducto(Long idProducto, ActualizarProductoDto actualizarProductoDto){
         Producto producto = productoRepository.findById(idProducto)
-                .orElseThrow(() -> new IllegalArgumentException("No existe el producto con el id: " + idProducto));
+                .orElseThrow(() -> new RecursoNoEncontradoException("No existe el producto con el id: " + idProducto));
 
         LocalDate fechaProduccionFinal = actualizarProductoDto.getFechaProduccion() != null
                 ? actualizarProductoDto.getFechaProduccion() : producto.getFechaProduccion();
@@ -175,7 +178,7 @@ public class ProductoService {
         }
         if (actualizarProductoDto.getIdEmpresa() != null){
             Empresa empresa = empresaRepository.findById(actualizarProductoDto.getIdEmpresa())
-                    .orElseThrow(() -> new IllegalArgumentException("Empresa no encontrada"));
+                    .orElseThrow(() -> new RecursoNoEncontradoException("Empresa no encontrada"));
             Long nuevaEmpresa = actualizarProductoDto.getIdEmpresa();
             Long actualEmpresa = producto.getEmpresa().getId();
             if (nuevaEmpresa.longValue() != actualEmpresa.longValue()){
@@ -185,7 +188,7 @@ public class ProductoService {
         }
         if (actualizarProductoDto.getIdCategoria() != null){
             Categoria categoria = categoriaRepository.findById(actualizarProductoDto.getIdCategoria())
-                    .orElseThrow(() -> new IllegalArgumentException("Categoria no encontrada"));
+                    .orElseThrow(() -> new RecursoNoEncontradoException("Categoria no encontrada"));
             Long nuevaCategoria = actualizarProductoDto.getIdCategoria();
             Long actualCategoria = producto.getCategoria().getId();
             if (nuevaCategoria.longValue() != actualCategoria.longValue()){
@@ -195,7 +198,7 @@ public class ProductoService {
         }
         if (actualizarProductoDto.getIdUbicacion() != null){
             Ubicacion ubicacion = ubicacionRepository.findById(actualizarProductoDto.getIdUbicacion())
-                    .orElseThrow(() -> new IllegalArgumentException("Ubicacion no encontrada"));
+                    .orElseThrow(() -> new RecursoNoEncontradoException("Ubicacion no encontrada"));
             Long  nuevaUbicacion = actualizarProductoDto.getIdUbicacion();
             Long actualUbicacion = producto.getUbicacion().getId();
             if (nuevaUbicacion.longValue() != actualUbicacion.longValue()){
@@ -222,7 +225,7 @@ public class ProductoService {
                     authorizationService.obtenerUsuarioAutenticado()
             );
         }else {
-            throw new IllegalArgumentException("No se detecto ningún cambio de producto");
+            throw new CambioNoDetectadoException("No se detecto ningún cambio de producto");
         }
         return producto;
     }
@@ -231,7 +234,7 @@ public class ProductoService {
     @Transactional
     public Producto eliminarProducto(Long idProducto){
         Producto producto = productoRepository.findById(idProducto)
-                .orElseThrow(() -> new IllegalArgumentException("No existe el producto con el id: " + idProducto));
+                .orElseThrow(() -> new RecursoNoEncontradoException("No existe el producto con el id: " + idProducto));
         auditoriaService.registrarAuditoria(
                 TipoAccion.ELIMINAR,
                 EntidadAuditoria.PRODUCTO,
