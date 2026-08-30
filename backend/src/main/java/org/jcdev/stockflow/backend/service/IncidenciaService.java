@@ -7,6 +7,7 @@ import org.jcdev.stockflow.backend.entity.*;
 import org.jcdev.stockflow.backend.enums.auditoria.EntidadAuditoria;
 import org.jcdev.stockflow.backend.enums.auditoria.TipoAccion;
 import org.jcdev.stockflow.backend.enums.incidencia.EstadoIncidencia;
+import org.jcdev.stockflow.backend.exception.RecursoNoEncontradoException;
 import org.jcdev.stockflow.backend.repository.*;
 import org.jcdev.stockflow.backend.service.security.AuthorizationService;
 import org.springframework.stereotype.Service;
@@ -77,7 +78,7 @@ public class IncidenciaService {
         //validamos el campo y buscamos un producto
         if (crearIncidenciaDto.getIdProducto() != null) {
             producto = productoRepository.findById(crearIncidenciaDto.getIdProducto())
-                    .orElseThrow(() -> new IllegalArgumentException("Producto no encontrado"));
+                    .orElseThrow(() -> new RecursoNoEncontradoException("Producto no encontrado"));
         }
         //validamos el campo y buscamos una recepcion
         if (crearIncidenciaDto.getIdRecepcion() != null) {
