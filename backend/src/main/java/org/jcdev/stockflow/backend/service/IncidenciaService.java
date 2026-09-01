@@ -7,7 +7,9 @@ import org.jcdev.stockflow.backend.entity.*;
 import org.jcdev.stockflow.backend.enums.auditoria.EntidadAuditoria;
 import org.jcdev.stockflow.backend.enums.auditoria.TipoAccion;
 import org.jcdev.stockflow.backend.enums.incidencia.EstadoIncidencia;
+import org.jcdev.stockflow.backend.exception.CambioNoDetectadoException;
 import org.jcdev.stockflow.backend.exception.RecursoNoEncontradoException;
+import org.jcdev.stockflow.backend.exception.TransicionEstadoInvalidaException;
 import org.jcdev.stockflow.backend.repository.*;
 import org.jcdev.stockflow.backend.service.security.AuthorizationService;
 import org.springframework.stereotype.Service;
@@ -83,7 +85,7 @@ public class IncidenciaService {
         //validamos el campo y buscamos una recepcion
         if (crearIncidenciaDto.getIdRecepcion() != null) {
             recepcion = recepcionRepository.findById(crearIncidenciaDto.getIdRecepcion())
-                    .orElseThrow(() -> new IllegalArgumentException("Recepcion no encontrada"));
+                    .orElseThrow(() -> new RecursoNoEncontradoException("Recepcion no encontrada"));
         }
 
         //validamos que este asociada a algun producto o recepcion
@@ -114,7 +116,7 @@ public class IncidenciaService {
     public Incidencia actualizarIncidencia(Long idIncidencia,ActualizarIncidenciaDto actualizarIncidenciaDto) {
         //buscamos la incidencia
         Incidencia incidencia = incidenciaRepository.findById(idIncidencia)
-                .orElseThrow(() -> new IllegalArgumentException("Incidencia no encontrada"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Incidencia no encontrada"));
 
         boolean detectarCambio = false;
         boolean cambioEstado = false;
@@ -132,10 +134,10 @@ public class IncidenciaService {
 
         if (estadoNuevo != null && estadoNuevo != estadoActual) {
             switch (estadoActual) {
-                case resuelta -> throw new IllegalArgumentException("Una incidencia resuelta no puede cambiar de estado");
+                case resuelta -> throw new TransicionEstadoInvalidaException("Una incidencia resuelta no puede cambiar de estado");
                 case en_proceso -> {
                     if (estadoNuevo == EstadoIncidencia.pendiente){
-                        throw new IllegalArgumentException(
+                        throw new TransicionEstadoInvalidaException(
                                 "Una incidencia en proceso no puede volver a pendiente"
                         );
                     }
@@ -148,7 +150,7 @@ public class IncidenciaService {
         if (detectarCambio || cambioEstado) {
             incidencia =  incidenciaRepository.save(incidencia);
         } else {
-            throw new IllegalArgumentException("No se detecto ningun cambio");
+            throw new CambioNoDetectadoException("No se detecto ningun cambio");
         }
 
         if (cambioEstado) {
