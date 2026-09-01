@@ -8,6 +8,9 @@ import org.jcdev.stockflow.backend.entity.Producto;
 import org.jcdev.stockflow.backend.enums.auditoria.EntidadAuditoria;
 import org.jcdev.stockflow.backend.enums.auditoria.TipoAccion;
 import org.jcdev.stockflow.backend.enums.empresa.TipoEmpresa;
+import org.jcdev.stockflow.backend.exception.CambioNoDetectadoException;
+import org.jcdev.stockflow.backend.exception.RecursoDuplicadoException;
+import org.jcdev.stockflow.backend.exception.RecursoNoEncontradoException;
 import org.jcdev.stockflow.backend.repository.EmpresaRepository;
 import org.jcdev.stockflow.backend.repository.ProductoRepository;
 import org.jcdev.stockflow.backend.service.security.AuthorizationService;
@@ -43,7 +46,7 @@ public class EmpresaService {
     public List<Producto> obtenerProductosPorEmpresa(Long idEmpresa){
         Empresa empresa = empresaRepository.findById(idEmpresa)
                 .orElseThrow(() ->
-                        new IllegalArgumentException("La empresa no existe: "+idEmpresa));
+                        new RecursoNoEncontradoException("La empresa no existe: "+idEmpresa));
 
         return productoRepository.findByEmpresaId(empresa.getId());
     }
@@ -56,10 +59,10 @@ public class EmpresaService {
         String direccion = crearEmpresaDto.getDireccion().trim();
         String telefono = crearEmpresaDto.getTelefono().trim();
         if (empresaRepository.existsByNombreIgnoreCase(nombre)){
-            throw new IllegalArgumentException("Ya existe una empresa con ese nombre!");
+            throw new RecursoDuplicadoException("Ya existe una empresa con ese nombre!");
         }
         if (empresaRepository.existsByEmailIgnoreCase(email)){
-            throw new IllegalArgumentException("Ya existe una empresa con ese email!");
+            throw new RecursoDuplicadoException("Ya existe una empresa con ese email!");
         }
         Empresa empresa = new Empresa();
         empresa.setNombre(nombre);
@@ -86,7 +89,7 @@ public class EmpresaService {
 
         Empresa empresa = empresaRepository.findById(idEmpresa)
                 .orElseThrow(
-                        () -> new IllegalArgumentException("La empresa no existe: "+idEmpresa)
+                        () -> new RecursoNoEncontradoException("La empresa no existe: "+idEmpresa)
                 );
 
         boolean detectarCambio = false;
@@ -98,7 +101,7 @@ public class EmpresaService {
             }
             if (!nombreNuevo.equalsIgnoreCase(nombreActual)){
                 if (empresaRepository.existsByNombreIgnoreCaseAndIdNot(nombreNuevo,idEmpresa)){
-                    throw new IllegalArgumentException("Ya existe una empresa con ese nombre!");
+                    throw new RecursoDuplicadoException("Ya existe una empresa con ese nombre!");
                 }
                 empresa.setNombre(nombreNuevo);
                 detectarCambio = true;
@@ -112,7 +115,7 @@ public class EmpresaService {
             }
             if (!emailNuevo.equalsIgnoreCase(emailActual)){
                 if (empresaRepository.existsByEmailIgnoreCaseAndIdNot(emailNuevo,idEmpresa)){
-                    throw new IllegalArgumentException("Ya existe una empresa con ese email!");
+                    throw new RecursoDuplicadoException("Ya existe una empresa con ese email!");
                 }
                 empresa.setEmail(emailNuevo);
                 detectarCambio = true;
@@ -167,7 +170,7 @@ public class EmpresaService {
                     authorizationService.obtenerUsuarioAutenticado()
             );
         }else {
-            throw new IllegalArgumentException("No se detecto ningun cambio");
+            throw new CambioNoDetectadoException("No se detecto ningun cambio");
         }
         return empresa;
     }
@@ -175,7 +178,7 @@ public class EmpresaService {
     public Empresa eliminarEmpresa(Long idEmpresa){
         Empresa empresa = empresaRepository.findById(idEmpresa)
                 .orElseThrow(
-                        () -> new IllegalArgumentException("La empresa no existe: "+idEmpresa)
+                        () -> new RecursoNoEncontradoException("La empresa no existe: "+idEmpresa)
                 );
         empresaRepository.delete(empresa);
         auditoriaService.registrarAuditoria(
