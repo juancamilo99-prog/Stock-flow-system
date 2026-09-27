@@ -54,6 +54,7 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests.requestMatchers("/auth/login").permitAll()
+                                .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                                 .requestMatchers(HttpMethod.POST,"/usuarios").hasRole("COORDINADOR")
                                 .anyRequest().authenticated())
                 .csrf(AbstractHttpConfigurer::disable)

@@ -147,8 +147,6 @@ public class TareaService {
     //actualizar una tarea
     @Transactional
     public Tarea actualizarTarea(Long idTarea,ActualizarTareaDto actualizarTareaDto){
-        //TODO validar jerarquia de asignacion: COORDINADOR puede asignar tarea tanto a encargado como a operario
-        //TODO ENCARGADO soo puede asignar a operario
         Tarea tarea = tareaRepository.findById(idTarea)
                 .orElseThrow(() -> new RecursoNoEncontradoException("La tarea no existe"));
         boolean seCambioEstado = false;
