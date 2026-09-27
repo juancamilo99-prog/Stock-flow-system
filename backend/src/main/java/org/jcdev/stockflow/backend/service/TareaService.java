@@ -11,6 +11,7 @@ import org.jcdev.stockflow.backend.enums.auditoria.EntidadAuditoria;
 import org.jcdev.stockflow.backend.enums.auditoria.TipoAccion;
 import org.jcdev.stockflow.backend.enums.tarea.EstadoTarea;
 import org.jcdev.stockflow.backend.enums.tarea.PrioridadTarea;
+import org.jcdev.stockflow.backend.enums.usuario.Rol;
 import org.jcdev.stockflow.backend.exception.CambioNoDetectadoException;
 import org.jcdev.stockflow.backend.exception.RecursoNoEncontradoException;
 import org.jcdev.stockflow.backend.exception.TransicionEstadoInvalidaException;
@@ -93,8 +94,6 @@ public class TareaService {
     @Transactional
     public Tarea crearTarea(CrearTareaDto crearTareaDto){
 
-        //TODO validar jerarquia de asignacion: COORDINADOR puede asignar tarea tanto a encargado como a operario
-        //TODO ENCARGADO soo puede asignar a operario
         Tarea tarea = new Tarea();
         if (crearTareaDto.getIdPedido() != null && crearTareaDto.getIdRecepcion() != null) {
             throw new IllegalArgumentException("Debe indicar un pedido o una recepcion, no ambos");
@@ -102,6 +101,11 @@ public class TareaService {
         if (crearTareaDto.getIdUsuario() != null) {
             Usuario usuario = usuarioRepository.findById(crearTareaDto.getIdUsuario())
                     .orElseThrow(() -> new RecursoNoEncontradoException("El usuario no existe"));
+            if (authorizationService.obtenerUsuarioAutenticado().getRol() == Rol.ENCARGADO){
+                if (usuario.getRol() != Rol.OPERARIO){
+                    throw new IllegalArgumentException("No se puede asignar tarea a alguien que no es operario");
+                }
+            }
             tarea.setUsuario(usuario);
         }
         Pedido pedido = null;
