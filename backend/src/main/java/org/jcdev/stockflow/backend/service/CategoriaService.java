@@ -6,6 +6,9 @@ import org.jcdev.stockflow.backend.entity.Categoria;
 import org.jcdev.stockflow.backend.entity.Producto;
 import org.jcdev.stockflow.backend.enums.auditoria.EntidadAuditoria;
 import org.jcdev.stockflow.backend.enums.auditoria.TipoAccion;
+import org.jcdev.stockflow.backend.exception.CambioNoDetectadoException;
+import org.jcdev.stockflow.backend.exception.RecursoDuplicadoException;
+import org.jcdev.stockflow.backend.exception.RecursoNoEncontradoException;
 import org.jcdev.stockflow.backend.repository.CategoriaRepository;
 import org.jcdev.stockflow.backend.repository.ProductoRepository;
 import org.jcdev.stockflow.backend.service.security.AuthorizationService;
@@ -52,7 +55,7 @@ public class CategoriaService {
     public Categoria crearCategoria(CrearCategoriaDto crearCategoriaDto) {
         String nombre = crearCategoriaDto.getNombre().trim();
         if (categoriaRepository.existsByNombreIgnoreCase(nombre)) {
-            throw new IllegalArgumentException("La categoria ya existe: "+crearCategoriaDto.getNombre());
+            throw new RecursoDuplicadoException("La categoria ya existe: "+crearCategoriaDto.getNombre());
         }
         Categoria categoria = new Categoria(nombre);
         categoria = categoriaRepository.save(categoria);
@@ -70,7 +73,7 @@ public class CategoriaService {
     @Transactional
     public Categoria actualizarCategoria(Long idCategoria, CrearCategoriaDto crearCategoriaDto) {
         Categoria categoria = categoriaRepository.findById(idCategoria)
-                .orElseThrow(() -> new IllegalArgumentException("La categoria no existe: "+idCategoria));
+                .orElseThrow(() -> new RecursoNoEncontradoException("La categoria no existe: "+idCategoria));
 
         boolean cambioNombre = false;
 
@@ -84,7 +87,7 @@ public class CategoriaService {
             }
             if (!nuevoNombre.equalsIgnoreCase(nombreActual)){
                 if (categoriaRepository.existsByNombreIgnoreCaseAndIdNot(nuevoNombre, idCategoria)) {
-                    throw new IllegalArgumentException("Ya existe una categoria con el nombre "+nuevoNombre);
+                    throw new RecursoDuplicadoException("Ya existe una categoria con el nombre "+nuevoNombre);
                 }
                 categoria.setNombre(nuevoNombre);
                 cambioNombre = true;
@@ -100,7 +103,7 @@ public class CategoriaService {
                     authorizationService.obtenerUsuarioAutenticado()
             );
         }else {
-            throw new IllegalArgumentException("No se detecto ningún cambio");
+            throw new CambioNoDetectadoException("No se detecto ningún cambio");
         }
         return categoria;
     }
