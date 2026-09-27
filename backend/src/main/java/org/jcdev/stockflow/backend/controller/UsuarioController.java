@@ -1,5 +1,6 @@
 package org.jcdev.stockflow.backend.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.jcdev.stockflow.backend.dto.actualizardto.ActualizarUsuarioDto;
 import org.jcdev.stockflow.backend.dto.creardto.CrearUsuarioDto;
@@ -24,6 +25,7 @@ public class UsuarioController {
     }
 
     @PreAuthorize("hasRole('COORDINADOR') OR hasRole('ENCARGADO')")
+    @Operation(summary = "Obtiene todos los usuarios", description = "Requiere rol COORDINADOR O ENCARGADO")
     @GetMapping
     public ResponseEntity<List<UsuarioResponsesDto>> obtenerTodosUsuarios(){
         List<UsuarioResponsesDto> usuario = usuarioService.obtenerTodosUsuarios();
@@ -33,6 +35,7 @@ public class UsuarioController {
     @PreAuthorize("hasRole('COORDINADOR') " +
             "OR @authorizationService.esUsuarioActual(#idUsuario) " +
             "OR (hasRole('ENCARGADO') AND @authorizationService.esOperario(#idUsuario))")
+    @Operation(summary = "Obtiene todos el usuario por identificador", description = "Requiere rol COORDINADOR O ENCARGADO O SER OPERARIO")
     @GetMapping(path = "/{idUsuario}")
     public ResponseEntity<UsuarioResponsesDto> obtenerUsuarioPorId(@PathVariable Long idUsuario){
         UsuarioResponsesDto usuario = usuarioService.obtenerUsuarioPorId(idUsuario);
@@ -41,6 +44,7 @@ public class UsuarioController {
 
     //controller para obtener usuarios desactivados
     @PreAuthorize("hasRole('COORDINADOR') OR hasRole('ENCARGADO')")
+    @Operation(summary = "Obtiene todos los usuarios desactivados", description = "Requiere rol COORDINADOR O ENCARGADO")
     @GetMapping(path = "/desactivos")
     public ResponseEntity<List<UsuarioResponsesDto>> obtenerUsuariosDesactivados(){
         List<UsuarioResponsesDto> usuarios = usuarioService.obtenerUsuariosDesactivados();
@@ -49,6 +53,7 @@ public class UsuarioController {
 
     //controller para obtener usuarios activos
     @PreAuthorize("hasRole('COORDINADOR') OR hasRole('ENCARGADO')")
+    @Operation(summary = "Obtiene todos los usuarios activos", description = "Requiere rol COORDINADOR O ENCARGADO")
     @GetMapping(path = "/activos")
     public ResponseEntity<List<UsuarioResponsesDto>> obtenerUsuariosActivos(){
         List<UsuarioResponsesDto> usuarios = usuarioService.obtenerUsuariosActivos();
@@ -56,6 +61,7 @@ public class UsuarioController {
     }
 
     @PreAuthorize("hasRole('COORDINADOR')")
+    @Operation(summary = "Crear un usuario", description = "Requiere rol COORDINADOR")
     @PostMapping
     public ResponseEntity<UsuarioResponsesDto> crearUsuario(@Valid @RequestBody CrearUsuarioDto crearUsuarioDto){
         UsuarioResponsesDto usuario = usuarioService.crearUsuario(crearUsuarioDto);
@@ -64,6 +70,7 @@ public class UsuarioController {
     }
 
     @PreAuthorize("hasRole('COORDINADOR')")
+    @Operation(summary = "Actualizar un usuario", description = "Requiere rol COORDINADOR")
     @PatchMapping(path = "/{idUsuario}")
     public ResponseEntity<UsuarioResponsesDto> actualizarUsuario(@PathVariable Long idUsuario, @Valid @RequestBody ActualizarUsuarioDto actualizarUsuarioDto){
         UsuarioResponsesDto usuario = usuarioService.actualizarUsuario(idUsuario,actualizarUsuarioDto);
@@ -71,6 +78,7 @@ public class UsuarioController {
     }
 
     @PreAuthorize("hasRole('COORDINADOR')")
+    @Operation(summary = "Eliminar un usuario", description = "Requiere rol COORDINADOR")
     @DeleteMapping(path = "/{idUsuario}")
     public ResponseEntity<UsuarioResponsesDto> eliminarUsuario(@PathVariable Long idUsuario){
         UsuarioResponsesDto usuario = usuarioService.eliminarUsuario(idUsuario);
